@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ExpoBIZ v1.6.0</title>
+<title>ExpoBIZ v1.7.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -21,6 +21,7 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#c8c
 #detail-overlay{scrollbar-width:none;-ms-overflow-style:none}
 #detail-overlay::-webkit-scrollbar{display:none}
 @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideDown{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}85%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
 </style>
 </head>
@@ -35,12 +36,12 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#c8c
           <div style="color:rgba(255,255,255,.5);font-size:11px;font-weight:600;letter-spacing:1px">EXPO PLATFORM</div>
           <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
             <div style="color:#fff;font-size:24px;font-weight:900;background:linear-gradient(135deg,#fff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent">ExpoBIZ</div>
-            <span style="color:rgba(255,255,255,.35);font-size:10px;font-weight:600">v1.6.0</span>
+            <span style="color:rgba(255,255,255,.35);font-size:10px;font-weight:600">v1.7.0</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span style="position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:3px;background:#ef4444"></span></div>
-          <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div onclick="showNotifications()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span id="noti-badge" style="position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:3px;background:#ef4444"></span></div>
+          <div onclick="switchTab('my')" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         </div>
       </div>
     </div>
@@ -127,6 +128,16 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#c8c
   <div id="auth-modal" onclick="if(event.target===this)closeAuth()" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:110;display:none;align-items:center;justify-content:center;padding:20px">
     <div id="auth-box" style="background:#fff;border-radius:24px;width:100%;max-width:353px;overflow:hidden;animation:slideUp .3s ease"></div>
   </div>
+  <!-- 알림 패널 -->
+  <div id="noti-panel" onclick="if(event.target===this)closeNoti()" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:105;display:none">
+    <div style="position:absolute;top:0;left:0;right:0;background:#fff;border-radius:0 0 24px 24px;padding:52px 20px 24px;max-height:70%;overflow-y:auto;animation:slideDown .3s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:900;color:#1e1e2e">알림</div>
+        <div onclick="closeNoti()" style="width:32px;height:32px;border-radius:16px;background:rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#6b7280">✕</div>
+      </div>
+      <div id="noti-list"></div>
+    </div>
+  </div>
   <!-- 상세 페이지 오버레이 -->
   <div id="detail-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#f5f5f7;z-index:100;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div id="detail-content"></div>
@@ -142,12 +153,53 @@ let currentTab = 'home';
 let _allData = [];
 let _favorites = []; // 즐겨찾기 ID 목록
 
+/* ─── 알림 시스템 ─── */
+function showNotifications(){
+  const panel=document.getElementById('noti-panel');
+  const list=document.getElementById('noti-list');
+  panel.style.display='block';
+  // 알림 배지 숨기기
+  const badge=document.getElementById('noti-badge');
+  if(badge)badge.style.display='none';
+  // 가까운 전시회 알림 생성
+  const upcoming=_allData.filter(e=>!e.isPlaceholder).filter(e=>{
+    const s=new Date(e.dateStart);s.setHours(0,0,0,0);
+    const d=Math.round((s-today)/864e5);
+    return d>=0&&d<=14;
+  }).sort((a,b)=>new Date(a.dateStart)-new Date(b.dateStart)).slice(0,8);
+  if(upcoming.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px">새로운 알림이 없습니다</div>';
+    return;
+  }
+  list.innerHTML=upcoming.map(ex=>{
+    const s=new Date(ex.dateStart);s.setHours(0,0,0,0);
+    const d=Math.round((s-today)/864e5);
+    const ra=getRegAvail(ex);
+    const msg=d===0?'오늘 진행 중!':d<=3?d+'일 후 시작':'곧 시작 (D-'+d+')';
+    const isUrgent=d<=3;
+    return `<div onclick="closeNoti();showDetail(_allData.find(e=>e.id===${ex.id}))" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;cursor:pointer;${isUrgent?'background:rgba(239,68,68,.06)':'background:rgba(0,0,0,.02)'};margin-bottom:6px;border:1px solid ${isUrgent?'rgba(239,68,68,.1)':'rgba(0,0,0,.04)'}">
+      <div style="font-size:28px;flex-shrink:0">${ex.image}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#1e1e2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">${ex.venue} · ${ex.date}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:11px;font-weight:800;color:${isUrgent?'#ef4444':'#6366f1'}">${msg}</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">${ra.icon} ${ra.label}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function closeNoti(){document.getElementById('noti-panel').style.display='none';}
+
 /* ─── 즐겨찾기 관리 ─── */
 function toggleFav(id, e){
   if(e){ e.stopPropagation(); e.preventDefault(); }
   const idx = _favorites.indexOf(id);
   if(idx > -1){ _favorites.splice(idx, 1); }
   else { _favorites.push(id); }
+  // 세션 저장
+  try{sessionStorage.setItem('expobiz_fav',JSON.stringify(_favorites));}catch(e){}
   // 카드 하트 업데이트
   document.querySelectorAll('.fav-btn-'+id).forEach(el=>{
     el.innerHTML = _favorites.includes(id) ? '❤️' : '🤍';
@@ -233,6 +285,9 @@ function showToast(msg){
 
 /* ─── 인증 시스템 ─── */
 let _user = null; // {name, email, phone}
+// 세션 복원
+try{const su=sessionStorage.getItem('expobiz_user');if(su)_user=JSON.parse(su);}catch(e){}
+try{const sf=sessionStorage.getItem('expobiz_fav');if(sf)_favorites=JSON.parse(sf);}catch(e){}
 
 function renderMyPage(){
   const mc = document.getElementById('my-content');
@@ -247,7 +302,13 @@ function renderMyPage(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div onclick="switchTab('plan')" style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04);cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">관심 전시회</span><span class="fav-count" style="margin-left:auto;font-size:13px;color:#6b7280">${_favorites.length}개</span></div>
+        <div style="background:#fff;border-radius:14px;padding:16px;border:1px solid rgba(0,0,0,.04)">
+          <div style="display:flex;align-items:center;gap:12px;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">관심 전시회</span><span class="fav-count" style="margin-left:auto;font-size:13px;color:#6b7280">${_favorites.length}개</span></div>
+          ${_favorites.length>0?'<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">'+_allData.filter(ex=>_favorites.includes(ex.id)).map(ex=>{
+            const tc=THEME[ex.category]||ex.color||'#607D8B';
+            return '<div onclick="showDetail(_allData.find(e=>e.id==='+ex.id+'))" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.02);cursor:pointer;border:1px solid rgba(0,0,0,.04)"><div style="width:36px;height:36px;border-radius:10px;background:'+tc+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+ex.image+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:800;color:#1e1e2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ex.name+'</div><div style="font-size:10px;color:#6b7280;margin-top:1px">'+ex.venue+' · '+ex.date+'</div></div><span onclick="event.stopPropagation();toggleFav('+ex.id+',event);renderMyPage()" style="font-size:16px;cursor:pointer">❤️</span></div>';
+          }).join('')+'</div>':'<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px;margin-top:8px">카드에서 ♡를 누르면 여기에 추가됩니다</div>'}
+        </div>
         <div style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">나의 QR 입장권</span><span style="margin-left:auto;font-size:13px;color:#6b7280">0장</span></div>
         <div style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">설정</span></div>
       </div>
@@ -291,7 +352,7 @@ function showAuth(mode){
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:700;color:#6b7280;display:block;margin-bottom:6px">이메일</label>
-          <input id="auth-email" type="email" placeholder="example@email.com" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
+          <input id="auth-email" type="email" inputmode="email" lang="en" autocapitalize="off" autocorrect="off" placeholder="example@email.com" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
         </div>
         <div style="margin-bottom:8px">
           <label style="font-size:12px;font-weight:700;color:#6b7280;display:block;margin-bottom:6px">비밀번호</label>
@@ -315,11 +376,11 @@ function showAuth(mode){
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:700;color:#6b7280;display:block;margin-bottom:6px">이메일</label>
-          <input id="auth-email" type="email" placeholder="example@email.com" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
+          <input id="auth-email" type="email" inputmode="email" lang="en" autocapitalize="off" autocorrect="off" placeholder="example@email.com" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:700;color:#6b7280;display:block;margin-bottom:6px">전화번호</label>
-          <input id="auth-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
+          <input id="auth-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
         </div>
         <div style="margin-bottom:8px">
           <label style="font-size:12px;font-weight:700;color:#6b7280;display:block;margin-bottom:6px">비밀번호</label>
@@ -345,6 +406,7 @@ function doLogin(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='올바른 이메일 형식이 아닙니다';return;}
   if(pw.length<4){err.textContent='비밀번호가 올바르지 않습니다';return;}
   _user={name:email.split('@')[0], email:email, phone:''};
+  try{sessionStorage.setItem('expobiz_user',JSON.stringify(_user));}catch(e){}
   closeAuth();
   renderMyPage();
   showToast('로그인 완료! 환영합니다 👋');
@@ -362,13 +424,23 @@ function doSignup(){
   if(!phone){err.textContent='전화번호를 입력해주세요';return;}
   if(pw.length<6){err.textContent='비밀번호는 6자리 이상이어야 합니다';return;}
   _user={name:name, email:email, phone:phone};
+  try{sessionStorage.setItem('expobiz_user',JSON.stringify(_user));}catch(e){}
   closeAuth();
   renderMyPage();
   showToast('회원가입 완료! 환영합니다 🎉');
 }
 
+function formatPhone(el){
+  let v=el.value.replace(/[^0-9]/g,'');
+  if(v.length>11)v=v.slice(0,11);
+  if(v.length>7)v=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);
+  else if(v.length>3)v=v.slice(0,3)+'-'+v.slice(3);
+  el.value=v;
+}
+
 function doLogout(){
   _user=null;
+  try{sessionStorage.removeItem('expobiz_user');}catch(e){}
   renderMyPage();
   showToast('로그아웃 되었습니다');
 }
