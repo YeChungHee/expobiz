@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExpoBIZ v1.5.4</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#c8c2bc;display:flex;justify-content:center;padding:20px 0;min-height:100vh}
+.phone{width:393px;height:852px;border-radius:44px;overflow:hidden;background:#f5f5f7;position:relative;border:8px solid #1a1a2e;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.scroll{overflow-y:auto;height:100%;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+.bdg{display:inline-block;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.am-wrap{position:relative;height:330px;overflow:hidden;margin:0 20px;cursor:grab}
+.am-wrap:active{cursor:grabbing}
+.am-card{position:absolute;width:100%;left:0;top:0;border-radius:20px;overflow:hidden;will-change:transform,opacity,filter;transform-origin:center center}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#6b7280;font-size:14px;font-weight:600;gap:12px}
+.loading .spinner{width:32px;height:32px;border:3px solid rgba(99,102,241,.2);border-top:3px solid #6366f1;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#detail-overlay{scrollbar-width:none;-ms-overflow-style:none}
+#detail-overlay::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="scroll" id="scroll">
+    <div style="background:linear-gradient(165deg,#0f0f1a 0%,#1a1040 40%,#2d1b69 100%);padding:48px 20px 36px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-40px;right:-30px;width:160px;height:160px;border-radius:80px;background:radial-gradient(circle,rgba(99,102,241,.25),transparent 70%)"></div>
+      <div style="position:absolute;bottom:-20px;left:-20px;width:120px;height:120px;border-radius:60px;background:radial-gradient(circle,rgba(139,92,246,.2),transparent 70%)"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
+        <div>
+          <div style="color:rgba(255,255,255,.5);font-size:11px;font-weight:600;letter-spacing:1px">EXPO PLATFORM</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+            <div style="color:#fff;font-size:24px;font-weight:900;background:linear-gradient(135deg,#fff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent">ExpoBIZ</div>
+            <span style="color:rgba(255,255,255,.35);font-size:10px;font-weight:600">v1.5.4</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span style="position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:3px;background:#ef4444"></span></div>
+          <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;margin-top:20px">
+        <div style="font-size:26px;font-weight:900;color:#1e1e2e;letter-spacing:-0.5px">전시회 목록</div>
+        <div id="total-count" style="font-size:13px;color:#6b7280;font-weight:600">로딩중...</div>
+      </div>
+      <div style="position:relative;margin-bottom:6px">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span>
+        <input id="search-input" style="width:100%;background:rgba(0,0,0,.04);border:1.5px solid rgba(0,0,0,.06);border-radius:12px;padding:10px 14px 10px 36px;font-size:13px;font-weight:500;color:#1e1e2e;outline:none;font-family:inherit" placeholder="전시회, 장소, 카테고리 검색..." />
+      </div>
+    </div>
+    <div id="sections-container"></div>
+    <div style="height:80px"></div>
+    <div id="bottom-nav" style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);display:flex;align-items:center;padding:10px 0 26px;z-index:95">
+      <!-- 홈 -->
+      <div id="nav-home" onclick="switchTab('home')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#6366f1" stroke="#6366f1" stroke-width="1.8"><path d="M3 9.5l9-7 9 7V20a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#6366f1">홈</span>
+      </div>
+      <!-- 탐색 -->
+      <div id="nav-search" onclick="switchTab('search')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:.45">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span style="font-size:10px;font-weight:600;color:#c0c0c8">탐색</span>
+      </div>
+      <!-- QR (center) -->
+      <div id="nav-qr" onclick="switchTab('qr')" style="flex:1;display:flex;justify-content:center;cursor:pointer">
+        <div style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(99,102,241,.35);margin-top:-18px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"/></svg>
+        </div>
+      </div>
+      <!-- 플래너 -->
+      <div id="nav-plan" onclick="switchTab('plan')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:.45">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:10px;font-weight:600;color:#c0c0c8">플래너</span>
+      </div>
+      <!-- MY -->
+      <div id="nav-my" onclick="switchTab('my')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:.45">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size:10px;font-weight:600;color:#c0c0c8">MY</span>
+      </div>
+    </div>
+  </div>
+  <!-- 탐색 페이지 -->
+  <div id="page-search" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#f5f5f7;z-index:80;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="padding:56px 20px 100px">
+      <div style="font-size:22px;font-weight:900;color:#1e1e2e;margin-bottom:6px">탐색</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px">키워드로 전시회를 찾아보세요</div>
+      <input id="search-page-input" oninput="filterSearch()" style="width:100%;background:#fff;border:1.5px solid rgba(0,0,0,.08);border-radius:14px;padding:14px 16px;font-size:14px;outline:none;font-family:inherit;margin-bottom:16px" placeholder="전시회명, 장소, 카테고리..." />
+      <div id="search-results" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+  <!-- QR 페이지 -->
+  <div id="page-qr" style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(165deg,#1a1040,#2d1b69);z-index:80;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="padding:56px 20px 100px;text-align:center">
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">QR 입장권</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:30px">사전등록 후 발급된 QR코드를 확인하세요</div>
+      <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:40px 20px;margin:0 20px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5" style="margin-bottom:16px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3z"/></svg>
+        <div style="font-size:15px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px">등록된 QR 입장권이 없습니다</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3)">전시회 사전등록을 완료하면<br>여기에 QR 입장권이 표시됩니다</div>
+      </div>
+    </div>
+  </div>
+  <!-- 플래너 페이지 -->
+  <div id="page-plan" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#f5f5f7;z-index:80;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="padding:56px 20px 100px">
+      <div style="font-size:22px;font-weight:900;color:#1e1e2e;margin-bottom:6px">플래너</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px">나의 전시회 일정을 관리하세요</div>
+      <div id="plan-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="plan-empty" style="text-align:center;padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:12px;opacity:.3">📅</div>
+        <div style="font-size:15px;font-weight:700;color:#9ca3af">저장된 일정이 없습니다</div>
+        <div style="font-size:12px;color:#c0c0c8;margin-top:4px">카드에서 ♡를 누르면 여기에 추가됩니다</div>
+      </div>
+    </div>
+  </div>
+  <!-- MY 페이지 -->
+  <div id="page-my" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#f5f5f7;z-index:80;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="padding:56px 20px 100px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+        <div style="width:56px;height:56px;border-radius:28px;background:linear-gradient(135deg,#6366f1,#a78bfa);display:flex;align-items:center;justify-content:center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <div style="font-size:18px;font-weight:900;color:#1e1e2e">게스트</div>
+          <div style="font-size:12px;color:#6b7280">로그인하여 모든 기능을 사용하세요</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">관심 전시회</span><span style="margin-left:auto;font-size:13px;color:#6b7280">0개</span></div>
+        <div style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">나의 QR 입장권</span><span style="margin-left:auto;font-size:13px;color:#6b7280">0장</span></div>
+        <div style="background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1px solid rgba(0,0,0,.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span style="font-size:14px;font-weight:600;color:#1e1e2e">설정</span></div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px 40px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">로그인 / 회원가입</button>
+      </div>
+    </div>
+  </div>
+  <!-- 상세 페이지 오버레이 -->
+  <div id="detail-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#f5f5f7;z-index:100;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+const SHEET_API = "https://script.google.com/macros/s/AKfycbz4CkYNHCCvBa0saV2XE6mZTZZ2CdMSZ8rXhzN1mvSynEr7KiZtg2e3-eqKvTwjpLJk/exec";
+const THEME = {"반려동물":"#E8A87C","식음료":"#A0522D","건축":"#5B7DB1","육아":"#D4A0A0","농수산":"#7CB342","캠핑·아웃도어":"#4E7C46","스포츠·레저":"#3A6EA5","가구·인테리어":"#A67C52","산업·제조":"#607D8B","물류":"#4A7FB5","과학":"#7E57C2","환경·에너지":"#43A047","의료·바이오":"#C62828","IT·전자":"#1565C0","뷰티·화장품":"#E91E63","교육":"#FF8F00","금융":"#37474F","문화·엔터":"#8E24AA","자동차":"#424242","창업":"#FF6347"};
+const today = new Date(); today.setHours(0,0,0,0);
+const cStates = {};
+let currentTab = 'home';
+let _allData = [];
+
+/* ─── 탭 전환 ─── */
+function switchTab(tab){
+  currentTab = tab;
+  // 모든 페이지 숨기기
+  ['search','qr','plan','my'].forEach(p => {
+    const el = document.getElementById('page-'+p);
+    if(el) el.style.display = 'none';
+  });
+  // 홈이 아니면 해당 페이지 표시
+  if(tab !== 'home'){
+    const pg = document.getElementById('page-'+tab);
+    if(pg) pg.style.display = 'block';
+  }
+  // 상세 오버레이 닫기
+  document.getElementById('detail-overlay').style.display = 'none';
+  // 네비 아이콘 업데이트
+  const navItems = {
+    home: {fill:true, stroke:'#6366f1', color:'#6366f1', weight:'700'},
+    search: {fill:false, stroke:'#6366f1', color:'#6366f1', weight:'700'},
+    qr: {},
+    plan: {fill:false, stroke:'#6366f1', color:'#6366f1', weight:'700'},
+    my: {fill:false, stroke:'#6366f1', color:'#6366f1', weight:'700'},
+  };
+  ['home','search','plan','my'].forEach(k => {
+    const nav = document.getElementById('nav-'+k);
+    if(!nav) return;
+    const isOn = (k === tab);
+    nav.style.opacity = isOn ? '1' : '.45';
+    const svg = nav.querySelector('svg');
+    const span = nav.querySelector('span');
+    if(svg){
+      svg.setAttribute('stroke', isOn ? '#6366f1' : '#c0c0c8');
+      if(k === 'home') svg.setAttribute('fill', isOn ? '#6366f1' : 'none');
+    }
+    if(span){
+      span.style.color = isOn ? '#6366f1' : '#c0c0c8';
+      span.style.fontWeight = isOn ? '700' : '600';
+    }
+  });
+}
+
+/* ─── 탐색 검색 필터 ─── */
+function filterSearch(){
+  const q = (document.getElementById('search-page-input').value||'').toLowerCase();
+  const box = document.getElementById('search-results');
+  if(!box) return;
+  const matched = _allData.filter(e => !e.isPlaceholder && (e.name.toLowerCase().includes(q)||e.venue.toLowerCase().includes(q)||e.category.includes(q)));
+  box.innerHTML = matched.slice(0,20).map(ex => {
+    const tc = THEME[ex.category]||ex.color||'#607D8B';
+    const ra = getRegAvail(ex);
+    return `<div onclick='showDetail(window._d.find(e=>e.id===${ex.id}))' style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid rgba(0,0,0,.04)">
+      <div style="width:44px;height:44px;border-radius:12px;background:${tc};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${ex.image}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#1e1e2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">${ex.venue} · ${ex.date}</div>
+      </div>
+      <span style="font-size:10px;font-weight:800;color:${ra.color};white-space:nowrap">${ra.icon} ${ra.status==='신청가능'?'신청가능':ra.label}</span>
+    </div>`;
+  }).join('');
+  if(matched.length===0) box.innerHTML='<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px">검색 결과가 없습니다</div>';
+}
+
+function showDetail(ex){
+  const ov=document.getElementById('detail-overlay');
+  const dc=document.getElementById('detail-content');
+  const tc=THEME[ex.category]||ex.color||'#607D8B';
+  const dd=dday(ex),st=stars(ex.rating,14),ra=getRegAvail(ex);
+  const searchUrl=ex.regUrl||('https://www.google.com/search?q='+encodeURIComponent(ex.name+' '+ex.venue+' 사전등록'));
+  dc.innerHTML=`
+    <div style="background:linear-gradient(165deg,${tc}dd,${tc}88,${tc}44);padding:52px 20px 28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:70px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%)"></div>
+      <button onclick="hideDetail()" style="background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:18px;font-family:'Noto Sans KR',sans-serif">← 뒤로</button>
+      <div style="font-size:56px;margin-bottom:14px">${ex.image}</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <span class="bdg" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">${ex.free?'✓ 무료':ex.price||'유료'}</span>
+        <span class="bdg" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">${ex.category}</span>
+        <span class="bdg" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">${ex.visitors?'👥 '+ex.visitors:''}</span>
+        <span class="bdg" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">📍 ${ex.venue}</span>
+      </div>
+      <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:8px">${ex.name}</div>
+      <div style="color:rgba(255,255,255,.75);font-size:13px;font-weight:500">📍 ${ex.venue} ${ex.hall||''}</div>
+      <div style="color:rgba(255,255,255,.75);font-size:13px;font-weight:500;margin-top:3px">📅 ${ex.date}</div>
+      <div style="margin-top:10px;display:inline-flex;gap:2px">${st}</div>
+    </div>
+    <div style="padding:16px 16px 0;display:flex;gap:10px">
+      <button onclick="window.open('${searchUrl}','_blank')" style="flex:2;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">${ex.free?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 무료 참가 신청':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 참관 신청'}</button>
+      <button style="flex:1;background:rgba(99,102,241,.08);color:#6366f1;border:1.5px solid rgba(99,102,241,.2);border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 저장</button>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:8px">
+      <div style="flex:1;background:rgba(0,0,0,.03);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;border:1px solid rgba(0,0,0,.04)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> 공유</div>
+      <div style="flex:1;background:rgba(0,0,0,.03);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;border:1px solid rgba(0,0,0,.04)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 링크복사</div>
+      <div style="flex:1;background:rgba(0,0,0,.03);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;border:1px solid rgba(0,0,0,.04)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 카카오톡</div>
+    </div>
+    <div style="padding:16px">
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+        <div style="font-size:14px;font-weight:800;color:#1e1e2e;margin-bottom:10px">전시 소개</div>
+        <div style="font-size:14px;color:#555;line-height:1.8">${ex.desc||'전시회 정보가 준비 중입니다.'}</div>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+        <div style="font-size:14px;font-weight:800;color:#1e1e2e;margin-bottom:10px">상세 정보</div>
+        ${[['📍 장소',ex.venue+' '+(ex.hall||'')],['📅 기간',ex.date],['💰 입장료',ex.free?'무료(사전등록)':(ex.price||'확인필요')],['🕐 운영','10:00 ~ 18:00 (입장마감 17:30)'],['👥 누적방문',(ex.visitors||'')+'명']].map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.04);font-size:13px"><span style="color:#6b7280;font-weight:500">${k}</span><span style="color:#1e1e2e;font-weight:700;text-align:right;max-width:58%">${v}</span></div>`).join('')}
+      </div>
+      <div style="background:${ra.bg};border:1.5px solid ${ra.color}33;border-radius:16px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:40px;height:40px;border-radius:12px;background:${ra.color}20;display:flex;align-items:center;justify-content:center;font-size:20px">${ra.icon}</div>
+            <div>
+              <div style="font-size:13px;font-weight:900;color:${ra.color}">${ra.label}</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">${ex.regDeadline?'마감일: '+ex.regDeadline.replace(/-/g,'.'):ra.status==='확인중'?'마감일 정보 없음':'마감일 추정'}</div>
+            </div>
+          </div>
+          ${ra.avail?`<button onclick="window.open('${searchUrl}','_blank')" style="background:${ra.color};color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif">바로 신청</button>`:''}
+        </div>
+      </div>
+    </div>
+    <div style="height:40px"></div>
+  `;
+  ov.style.display='block';
+  ov.scrollTop=0;
+}
+function hideDetail(){
+  document.getElementById('detail-overlay').style.display='none';
+}
+
+function cls(ex){ const s=new Date(ex.dateStart);s.setHours(0,0,0,0);const e=new Date(ex.dateEnd);e.setHours(23,59,59,999);return today>=s&&today<=e?"ongoing":today<s?"upcoming":"past";}
+function dday(ex){ const s=new Date(ex.dateStart);s.setHours(0,0,0,0);const d=Math.round((s-today)/864e5);return d===0?{l:"D-DAY",t:"today"}:d>0?{l:"D-"+d,t:"upcoming"}:{l:"D+"+Math.abs(d),t:"past"};}
+function stars(r,sz=8,onCard=false){const f=Math.floor(r);const fc=onCard?'#fff':'#f59e0b';const ec=onCard?'rgba(255,255,255,.3)':'#d1d5db';const sh=onCard?'text-shadow:0 1px 3px rgba(0,0,0,.3)':'';return Array.from({length:5},(_,i)=>`<span style="color:${i<f?fc:ec};font-size:${sz}px;${sh}">★</span>`).join('');}
+
+function getRegAvail(ex){
+  const now=new Date();now.setHours(0,0,0,0);
+  const start=new Date(ex.dateStart);start.setHours(0,0,0,0);
+  const end=new Date(ex.dateEnd);end.setHours(0,0,0,0);
+  if(now>end)return{status:"종료",label:"종료",color:"#9ca3af",bg:"rgba(156,163,175,.12)",icon:"⚫",avail:false};
+  if(ex.regDeadline){
+    const dl=new Date(ex.regDeadline);dl.setHours(0,0,0,0);
+    const d=Math.ceil((dl-now)/864e5);
+    if(d<0)return{status:"마감",label:"신청마감",color:"#ef4444",bg:"rgba(239,68,68,.1)",icon:"🔴",avail:false};
+    if(d===0)return{status:"오늘마감",label:"오늘 마감!",color:"#ef4444",bg:"rgba(239,68,68,.15)",icon:"🔥",avail:true,urgent:true,d:0};
+    if(d<=3)return{status:"신청가능",label:"신청가능 D-"+d,color:"#f59e0b",bg:"rgba(245,158,11,.12)",icon:"⚠️",avail:true,urgent:true,d};
+    if(d<=7)return{status:"신청가능",label:"신청가능 D-"+d,color:"#22c55e",bg:"rgba(34,197,94,.1)",icon:"🟢",avail:true,urgent:false,d};
+    return{status:"신청가능",label:"신청가능 D-"+d,color:"#22c55e",bg:"rgba(34,197,94,.08)",icon:"🟢",avail:true,urgent:false,d};
+  }
+  if(ex.regUrl){
+    const est=new Date(start.getTime()-864e5);const d=Math.ceil((est-now)/864e5);
+    if(d<0)return{status:"마감추정",label:"마감추정",color:"#f59e0b",bg:"rgba(245,158,11,.1)",icon:"🟡",avail:false};
+    return{status:"신청가능",label:"신청가능(추정) D-"+d,color:"#22c55e",bg:"rgba(34,197,94,.08)",icon:"🟢",avail:true,urgent:d<=3,d};
+  }
+  return{status:"확인중",label:"확인중",color:"#f59e0b",bg:"rgba(245,158,11,.08)",icon:"🟡",avail:false};
+}
+
+function renderC(cid,items){
+  const w=document.getElementById('wrap-'+cid);if(!w)return;
+  const idx=cStates[cid]||0,tot=items.length;w.innerHTML='';
+  items.forEach((ex,i)=>{
+    let df=i-idx;if(df<-1)df+=tot;if(df>tot-1)df-=tot;
+    let tx,sc,op,bl,z;
+    if(df===0){tx=0;sc=1;op=1;bl=0;z=10;}
+    else if(df===-1){tx=-316;sc=.92;op=.35;bl=4;z=1;}
+    else if(df===1){tx=316;sc=.92;op=.35;bl=3;z=5;}
+    else if(df===2){tx=632;sc=.88;op=.15;bl=6;z=2;}
+    else{tx=948;sc=.85;op=0;bl=0;z=0;}
+    const tc=THEME[ex.category]||ex.color||'#607D8B';
+    const c=document.createElement('div');c.className='am-card';
+    c.style.cssText=`transform:translateX(${tx}px) scale(${sc});opacity:${op};filter:${bl>0?`blur(${bl}px)`:'none'};z-index:${z};pointer-events:${df===0?'auto':'none'};transition:all .45s cubic-bezier(.32,.72,.24,1);`;
+    if(ex.isPlaceholder){
+      c.innerHTML=`<div style="background:linear-gradient(135deg,#e5e7eb,#d1d5db);padding:22px 20px 18px;position:relative;min-height:310px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+        <div style="font-size:60px;margin-bottom:16px;opacity:.5">🔄</div>
+        <div style="font-size:20px;font-weight:900;color:#6b7280;line-height:1.3">UPDATE 예정</div>
+        <div style="font-size:13px;color:#9ca3af;font-weight:500;margin-top:8px">새로운 전시회가<br>곧 업데이트됩니다</div>
+      </div>`;
+    } else {
+      const dd=dday(ex),st=stars(ex.rating,8,true),ra=getRegAvail(ex);
+      const raBg=ra.avail?(ra.urgent?'rgba(239,68,68,.35)':'rgba(34,197,94,.3)'):(ra.status==='마감'||ra.status==='마감추정'?'rgba(239,68,68,.2)':'rgba(255,255,255,.12)');
+      const raBorder=ra.urgent?'border:1px solid rgba(239,68,68,.5)':ra.avail?'border:1px solid rgba(34,197,94,.4)':'border:none';
+      const raAnim=ra.urgent?'animation:urgentPulse 1.5s infinite':'';
+      c.innerHTML=`<div style="background:${tc};padding:22px 20px 18px;position:relative;min-height:310px;box-shadow:inset 0 0 80px rgba(0,0,0,.15)">
+        <div style="position:absolute;top:-30px;right:-20px;width:140px;height:140px;border-radius:70px;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%)"></div>
+        <div style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer">🤍</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="display:inline-flex;gap:1px">${st}</span><span style="color:rgba(255,255,255,.8);font-size:10px;font-weight:700">${ex.rating}</span></div>
+        </div>
+        <span class="bdg" style="background:${dd.t==='today'?'#ef4444':dd.t==='upcoming'?'rgba(255,255,255,.2)':'rgba(255,255,255,.12)'};color:#fff;font-size:10px;font-weight:800">${dd.l}</span>
+        <div style="margin:14px 0 10px"><div style="font-size:52px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))">${ex.image}</div></div>
+        <div style="font-size:20px;font-weight:900;color:#fff;line-height:1.25;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.3)">${ex.name}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><span class="bdg" style="background:rgba(255,255,255,.15);color:#fff;font-size:10px">${ex.free?'무료':ex.price||'유료'}</span><span class="bdg" style="background:rgba(255,255,255,.15);color:#fff;font-size:10px">📍 ${ex.venue}</span></div>
+        <div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:500">${ex.venue} ${ex.hall} · ${ex.date}</div>
+        <div style="margin-top:8px"><span class="bdg" style="background:${raBg};color:#fff;font-size:10px;font-weight:800;${raBorder};${raAnim}">${ra.icon} ${ra.label}</span></div>
+      </div>`;
+    }
+    c.onclick=()=>{if(df===0&&!ex.isPlaceholder)showDetail(ex);};
+    w.appendChild(c);
+  });
+  const dots=document.getElementById('dots-'+cid);
+  if(dots){dots.innerHTML='';
+    const tot2=items.length,maxDots=7;
+    if(tot2<=maxDots){
+      items.forEach((_,i)=>{const d=document.createElement('div');d.style.cssText=`width:${i===idx?'18px':'6px'};height:6px;border-radius:3px;background:${i===idx?'#6366f1':'rgba(0,0,0,.12)'};transition:all .3s;cursor:pointer`;d.onclick=e=>{e.stopPropagation();cStates[cid]=i;renderC(cid,items);};dots.appendChild(d);});
+    } else {
+      // 축약 인디케이터: 현재 위치 주변 dots + 숫자 표시
+      const numEl=document.createElement('div');
+      numEl.style.cssText='display:flex;align-items:center;gap:6px';
+      for(let i=0;i<Math.min(5,tot2);i++){
+        const pos=Math.max(0,Math.min(tot2-5,idx-2))+i;
+        const d=document.createElement('div');
+        const isActive=pos===idx;
+        const dist=Math.abs(pos-idx);
+        const sz=dist===0?'18px':dist===1?'6px':'4px';
+        const h=dist===0?'6px':dist===1?'6px':'4px';
+        const opVal=dist===0?1:dist===1?0.5:0.25;
+        d.style.cssText=`width:${sz};height:${h};border-radius:3px;background:${isActive?'#6366f1':'rgba(0,0,0,.12)'};opacity:${opVal};transition:all .3s;cursor:pointer`;
+        d.onclick=(e=>{e.stopPropagation();cStates[cid]=pos;renderC(cid,items);});
+        numEl.appendChild(d);
+      }
+      const label=document.createElement('span');
+      label.style.cssText='font-size:10px;color:#9ca3af;font-weight:600;margin-left:2px';
+      label.textContent=`${idx+1}/${tot2}`;
+      numEl.appendChild(label);
+      dots.appendChild(numEl);
+    }
+  }
+  let da=false,dx0=0;
+  const dn=e=>{da=true;dx0=e.touches?e.touches[0].clientX:e.clientX;};
+  const up=e=>{if(!da)return;da=false;const cx=e.changedTouches?e.changedTouches[0].clientX:e.clientX;const dx=cx-dx0;if(Math.abs(dx)>40){let ni=idx+(dx<0?1:-1);if(ni<0)ni=tot-1;if(ni>=tot)ni=0;cStates[cid]=ni;renderC(cid,items);}};
+  w.onmousedown=dn;w.ontouchstart=dn;w.onmouseup=up;w.ontouchend=up;
+}
+
+function render(exs){
+  const ct=document.getElementById('sections-container');ct.innerHTML='';
+  // 오늘 기준 2개월 이내만 필터
+  const maxDate=new Date(today);maxDate.setMonth(maxDate.getMonth()+2);maxDate.setHours(23,59,59,999);
+  const filtered=exs.filter(e=>{const s=new Date(e.dateStart);return s<=maxDate;});
+  const all=filtered.map(e=>({...e,st:cls(e)}));
+  document.getElementById('total-count').textContent=all.length+'개';
+  // UPDATE 예정 플레이스홀더 카드
+  const updateCard={id:99999,name:"UPDATE 예정",venue:"",hall:"",date:"새로운 전시회가 곧 업데이트됩니다",dateStart:"2099-12-31",dateEnd:"2099-12-31",category:"",free:false,price:"",image:"🔄",color:"#9CA3AF",rating:0,isPlaceholder:true};
+  [{k:'ongoing',l:'LIVE',ic:'🔴'},{k:'upcoming',l:'NEXT',ic:'🔵'},{k:'past',l:'OFF',ic:'⚫'}].forEach((g,gi)=>{
+    let items=all.filter(e=>e.st===g.k);if(!items.length)return;
+    if(g.k==='upcoming')items=[...items,updateCard];
+    const cid='c'+gi;cStates[cid]=cStates[cid]||0;
+    const s=document.createElement('div');
+    s.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:0 16px;margin-bottom:10px;margin-top:${gi===0?'14':'8'}px"><div style="font-size:15px;font-weight:900;color:#1e1e2e">${g.ic} ${g.l}</div><div style="font-size:12px;color:#6b7280;font-weight:600;margin-left:auto">${items.length}개</div></div><div class="am-wrap" id="wrap-${cid}"></div><div id="dots-${cid}" style="display:flex;justify-content:center;gap:5px;margin-top:6px;margin-bottom:18px"></div>`;
+    ct.appendChild(s);renderC(cid,items);
+  });
+}
+
+document.getElementById('search-input').oninput=e=>{if(!window._d)return;const q=e.target.value.toLowerCase();render(q?window._d.filter(x=>x.name.toLowerCase().includes(q)||x.venue.toLowerCase().includes(q)||(x.category||'').toLowerCase().includes(q)):window._d);};
+
+const FALLBACK = [
+  { id: 1, name: "마이펫페어 2026 일산 Part1", venue: "킨텍스", hall: "전시홀 7", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.01.16 ~ 01.18", dateStart: "2026-01-16", dateEnd: "2026-01-18", category: "반려동물", free: true, price: "무료(사전등록)", regDeadline: "2026-01-11", image: "🐾", color: "#FF6B9D", desc: "반려동물 용품 및 서비스를 한자리에서 만날 수 있는 전문 박람회입니다. 펫의류, 먹이, 장난감 등 다양한 제품이 전시됩니다.", visitors: "3만", rating: 4.5, regUrl: "https://www.mypetfair.co.kr/mypetfairticket" },
+  { id: 2, name: "2026 카페디저트페어", venue: "킨텍스", hall: "전시홀 7A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.01.22 ~ 01.25", dateStart: "2026-01-22", dateEnd: "2026-01-25", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-01-17", image: "☕", color: "#8B4513", desc: "카페 운영자와 디저트 제조업체들의 신상품 발표 및 거래 기회의 장입니다. 최신 커피 머신과 베이킹 트렌드를 만날 수 있습니다.", visitors: "4만", rating: 4.6, regUrl: "https://www.cafedessertfair.com/" },
+  { id: 3, name: "2026 코리아빌드위크", venue: "킨텍스", hall: "전시홀 1~5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.02.04 ~ 02.07", dateStart: "2026-02-04", dateEnd: "2026-02-07", category: "건축", free: true, price: "무료(사전등록)", regDeadline: "2026-01-30", image: "🏗️", color: "#4A90E2", desc: "건설 및 건축 산업의 최신 기술과 자재를 선보이는 대규모 국제 박람회입니다. 건설사 및 건축가를 위한 필수 행사입니다.", visitors: "6만", rating: 4.7, regUrl: "https://koreabuild.co.kr/kintex/" },
+  { id: 4, name: "제52회 맘앤베이비엑스포", venue: "킨텍스", hall: "전시홀 7", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.02.26 ~ 03.01", dateStart: "2026-02-26", dateEnd: "2026-03-01", category: "육아", free: true, price: "무료(사전등록)", regDeadline: "2026-02-21", image: "👶", color: "#FFB6C1", desc: "임산부 및 영아용 필수용품을 소개하는 박람회입니다. 의류, 이유식, 유모차 등 아기 관련 제품의 최신 트렌드를 확인할 수 있습니다.", visitors: "5만", rating: 4.5, regUrl: "https://www.mombaby.co.kr/" },
+  { id: 5, name: "2026 서울경기 밀리언쇼 우수중소기업&농특산품박람회", venue: "킨텍스", hall: "전시홀 1A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.05 ~ 03.09", dateStart: "2026-03-05", dateEnd: "2026-03-09", category: "농수산", free: true, price: "무료(사전등록)", regDeadline: "2026-02-28", image: "🌾", color: "#90EE90", desc: "우수 중소기업과 지역 농특산품을 소비자에게 직접 소개하는 행사입니다. 한돈, 한우, 수산물 등 우수 상품의 시식과 구매 기회가 제공됩니다.", visitors: "4만", rating: 4.4, regUrl: "https://www.kintex.com/web/ko/event/view.do?seq=2025044120" },
+  { id: 6, name: "2026 캠핑앤피크닉페어", venue: "킨텍스", hall: "전시홀 7,8", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.06 ~ 03.08", dateStart: "2026-03-06", dateEnd: "2026-03-08", category: "캠핑·아웃도어", free: true, price: "무료(사전등록)", regDeadline: "2026-03-01", image: "⛺", color: "#228B22", desc: "캠핑 장비와 야외활동용품의 전문 박람회입니다. 텐트, 침낭, 취사용품 등 최신 캠핑 제품을 한자리에서 만날 수 있습니다.", visitors: "3만", rating: 4.6, regUrl: "https://www.campingfair.co.kr/" },
+  { id: 7, name: "2026 한국국제낚시박람회", venue: "킨텍스", hall: "전시홀 2", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.06 ~ 03.08", dateStart: "2026-03-06", dateEnd: "2026-03-08", category: "스포츠·레저", free: true, price: "무료(사전등록)", regDeadline: "2026-03-01", image: "🎣", color: "#4169E1", desc: "낚시용품과 장비의 국제 박람회입니다. 낚시대, 릴, 채비용품 등 다양한 낚시 용품 및 최신 기술 제품이 전시됩니다.", visitors: "2만", rating: 4.5, regUrl: "https://www.kintex.com/web/ko/event/view.do?seq=2025044120" },
+  { id: 8, name: "2026 고양 가구엑스포 & 홈앤리빙 더쇼", venue: "킨텍스", hall: "전시홀 10", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.12 ~ 03.15", dateStart: "2026-03-12", dateEnd: "2026-03-15", category: "가구·인테리어", free: true, price: "무료(사전등록)", regDeadline: "2026-03-07", image: "🛋️", color: "#D2691E", desc: "가구 및 홈인테리어 제품의 대규모 전시회입니다. 소파, 침대, 조명, 베드 용품 등 생활공간을 아름답게 꾸미는 제품들이 전시됩니다.", visitors: "5만", rating: 4.7, regUrl: "https://koreaxpo.com/" },
+  { id: 9, name: "2026 펫쇼코리아(상)", venue: "킨텍스", hall: "전시홀 7", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.13 ~ 03.15", dateStart: "2026-03-13", dateEnd: "2026-03-15", category: "반려동물", free: true, price: "무료(사전등록)", regDeadline: "2026-03-08", image: "🐶", color: "#FF8C00", desc: "반려동물 품종 전시 및 애완동물 용품 박람회입니다. 펫 관련 서비스, 훈련소, 미용용품 등 반려동물 문화를 한눈에 볼 수 있습니다.", visitors: "3만", rating: 4.6, regUrl: "https://www.pet-show.co.kr/page/page113" },
+  { id: 10, name: "오토모티브 테스팅 엑스포 2026", venue: "킨텍스", hall: "전시홀 10B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.18 ~ 03.20", dateStart: "2026-03-18", dateEnd: "2026-03-20", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-13", image: "🚗", color: "#1C1C1C", desc: "자동차 산업의 테스팅 장비 및 기술 박람회입니다. 차량 안전 검사 장비, 배출가스 측정 기술 등 자동차 제조 관련 산업용 제품이 전시됩니다.", visitors: "3만", rating: 4.4, regUrl: "https://www.kintex.com/web/ko/event/list.do" },
+  { id: 11, name: "제25회 세계 보안 엑스포", venue: "킨텍스", hall: "전시홀 3,4,5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.18 ~ 03.20", dateStart: "2026-03-18", dateEnd: "2026-03-20", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-13", image: "🔐", color: "#2F4F4F", desc: "보안 장비 및 기술의 국제 박람회입니다. CCTV, 접근제어, 화재감지기 등 통합보안 솔루션이 전시됩니다.", visitors: "4만", rating: 4.5, regUrl: "https://www.seconexpo.com/" },
+  { id: 12, name: "코리아 나라장터 엑스포 2026", venue: "킨텍스", hall: "전시홀 2B,3,4,5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.25 ~ 03.27", dateStart: "2026-03-25", dateEnd: "2026-03-27", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-20", image: "📋", color: "#696969", desc: "정부 구매 및 나라장터 입찰 관련 기업의 수의계약 기회 박람회입니다. 중소기업의 정부 사업 참여를 지원합니다.", visitors: "4만", rating: 4.3, regUrl: "https://www.koppex.com/2026/v2.php?s=22" },
+  { id: 13, name: "국제콜드체인산업전", venue: "킨텍스", hall: "전시홀 10A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "물류", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "❄️", color: "#4169E1", desc: "저온 물류 및 냉동식품 산업 전문 박람회입니다. 냉동 수송용 장비, 저온 창고 솔루션, 콜드체인 기술이 전시됩니다.", visitors: "3만", rating: 4.5, regUrl: "https://www.koreacoldchain.com/" },
+  { id: 14, name: "국제다크팩토리산업전", venue: "킨텍스", hall: "전시홀 10B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "🏭", color: "#36454F", desc: "스마트팩토리 및 자동화 생산 기술 박람회입니다. IoT 기반 생산 관리 시스템, 로봇 자동화 솔루션 등이 전시됩니다.", visitors: "3만", rating: 4.4, regUrl: "https://www.kintex.com/web/ko/event/list.do" },
+  { id: 15, name: "국제연구·실험 및 첨단분석장비전", venue: "킨텍스", hall: "전시홀 7A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "과학", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "🔬", color: "#800080", desc: "연구기관 및 대학을 위한 첨단 실험장비 박람회입니다. 분석기기, 측정 장비, 연구 소프트웨어 등 과학 연구용 제품이 전시됩니다.", visitors: "3만", rating: 4.5, regUrl: "https://www.kintex.com/web/ko/event/list.do" },
+  { id: 16, name: "제25회 국제포장기자재전", venue: "킨텍스", hall: "전시홀 1B,2,3", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "📦", color: "#8B4513", desc: "포장재료 및 포장기계 전문 박람회입니다. 종이박스, 필름, 포장기계, 라벨링 솔루션 등이 전시됩니다.", visitors: "5만", rating: 4.6, regUrl: "https://www.koreapack.org/" },
+  { id: 17, name: "국제물류산업대전", venue: "킨텍스", hall: "전시홀 9B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "물류", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "🚚", color: "#1E90FF", desc: "물류 산업의 종합 박람회입니다. 운송, 창고, 배송 관리 시스템, 지게차, 로봇 핸들링 솔루션 등이 전시됩니다.", visitors: "6만", rating: 4.7, regUrl: "https://www.koreamat.org/" },
+  { id: 18, name: "제2회 ESG 지속가능패키징페어", venue: "킨텍스", hall: "전시홀 1A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "환경·에너지", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "♻️", color: "#228B22", desc: "친환경 포장재 및 지속가능 포장기술 박람회입니다. 생분해 포장재, 재활용 소재, 친환경 포장 솔루션이 전시됩니다.", visitors: "3만", rating: 4.6, regUrl: "https://www.koreapack.org/" },
+  { id: 19, name: "국제제약·바이오·화장품기술전", venue: "킨텍스", hall: "전시홀 4B,5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "의료·바이오", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "💊", color: "#DC143C", desc: "제약, 바이오, 화장품 산업의 기술 및 원료 박람회입니다. 신약 개발 기술, 바이오소재, 화장품 원료가 전시됩니다.", visitors: "5만", rating: 4.7, regUrl: "https://www.koreapack.org/" },
+  { id: 20, name: "국제화학장치·공정기술전", venue: "킨텍스", hall: "전시홀 4A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "⚗️", color: "#FFD700", desc: "화학 산업의 장치 및 공정 기술 박람회입니다. 반응기, 증류장치, 액체 분리 기술, 공정 자동화 솔루션이 전시됩니다.", visitors: "3만", rating: 4.4, regUrl: "https://www.koreapack.org/" },
+  { id: 21, name: "코스메틱 인사이드 코리아", venue: "킨텍스", hall: "전시홀 7A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "뷰티·화장품", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "💄", color: "#FF1493", desc: "화장품 제조 및 원료 전문 박람회입니다. 기초 원료, 패키징 소재, 제조 장비, 용용 기술이 전시됩니다.", visitors: "3만", rating: 4.5, regUrl: "https://www.koreapack.org/" },
+  { id: 22, name: "국제의약품·바이오산업전", venue: "킨텍스", hall: "전시홀 7A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.03.31 ~ 04.03", dateStart: "2026-03-31", dateEnd: "2026-04-03", category: "의료·바이오", free: true, price: "무료(사전등록)", regDeadline: "2026-03-26", image: "🧬", color: "#00CED1", desc: "의약품 및 바이오 산업의 종합 박람회입니다. 신약 개발 플랫폼, 임상 시험 기술, 바이오 마커 진단 기술이 전시됩니다.", visitors: "4만", rating: 4.6, regUrl: "https://www.koreapack.org/" },
+  { id: 23, name: "2026 냥냥펀치 캣쇼 일산", venue: "킨텍스", hall: "전시홀 7B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.04.24 ~ 04.26", dateStart: "2026-04-24", dateEnd: "2026-04-26", category: "반려동물", free: true, price: "무료(사전등록)", regDeadline: "2026-04-19", image: "🐱", color: "#FF69B4", desc: "고양이 애호가들을 위한 전문 박람회입니다. 고양이 품종 전시, 건강용품, 장난감, 사료 등 고양이 관련 제품이 전시됩니다.", visitors: "2만", rating: 4.5, regUrl: "https://cat-show.co.kr/" },
+  { id: 24, name: "제70회 MBC건축박람회", venue: "킨텍스", hall: "전시홀 3A,4,5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.05.07 ~ 05.10", dateStart: "2026-05-07", dateEnd: "2026-05-10", category: "건축", free: true, price: "무료(사전등록)", regDeadline: "2026-05-02", image: "🏢", color: "#696969", desc: "건축 자재 및 인테리어 소재 박람회입니다. 문짝, 타일, 욕실용품, 건축 자재, 건설 기계 등 건축 전반의 제품이 전시됩니다.", visitors: "6만", rating: 4.7, regUrl: "https://koreabuild.co.kr/kintex/" },
+  { id: 25, name: "메가쇼 & 트래블쇼 2026 시즌 1", venue: "킨텍스", hall: "전시홀 4,5", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.05.14 ~ 05.17", dateStart: "2026-05-14", dateEnd: "2026-05-17", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-09", image: "✈️", color: "#1E90FF", desc: "국내외 여행 정보 및 패키지 여행 상품을 소개하는 박람회입니다. 항공사, 호텔, 여행사의 특가 상품과 여행 팁을 얻을 수 있습니다.", visitors: "5만", rating: 4.6, regUrl: "https://www.megashow.co.kr/" },
+  { id: 26, name: "2026 코베 베이비페어&유아교육전", venue: "킨텍스", hall: "전시홀 10", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.05.14 ~ 05.17", dateStart: "2026-05-14", dateEnd: "2026-05-17", category: "육아", free: true, price: "무료(사전등록)", regDeadline: "2026-05-09", image: "👪", color: "#FFB6C1", desc: "영아용품 및 유아교육 프로그램 박람회입니다. 교구, 학습용품, 문화센터, 유아복 등 0~7세 아동 관련 제품이 전시됩니다.", visitors: "4만", rating: 4.5 },
+  { id: 27, name: "2026 국제아웃도어캠핑&레포츠페스티벌(5월)", venue: "킨텍스", hall: "전시홀 7,8", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.05.23 ~ 05.25", dateStart: "2026-05-23", dateEnd: "2026-05-25", category: "캠핑·아웃도어", free: true, price: "무료(사전등록)", regDeadline: "2026-05-18", image: "🏕️", color: "#228B22", desc: "야외활동 전문 박람회입니다. 캠핑용품, 등산장비, 낚시 용품, 스포츠 용품 등 다양한 아웃도어 제품이 전시됩니다.", visitors: "4만", rating: 4.6 },
+  { id: 28, name: "2026 메가주 시즌1", venue: "킨텍스", hall: "전시홀 7,8", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.05.29 ~ 05.31", dateStart: "2026-05-29", dateEnd: "2026-05-31", category: "식음료", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-24", image: "🍺", color: "#8B4513", desc: "주류 및 음료 박람회입니다. 와인, 맥주, 소주, 칵테일 등 다양한 주류 상품과 주류 문화를 소개합니다.", visitors: "3만", rating: 4.4 },
+  { id: 29, name: "2026 마이프차 프랜차이즈 창업박람회 시즌 1", venue: "킨텍스", hall: "전시홀 10B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.06.04 ~ 06.07", dateStart: "2026-06-04", dateEnd: "2026-06-07", category: "창업", free: true, price: "무료(사전등록)", regDeadline: "2026-05-30", image: "🍽️", color: "#FF6347", desc: "외식 프랜차이즈 창업 박람회입니다. 한식, 중식, 일식, 카페 등 다양한 외식 브랜드의 가맹점 모집 정보를 얻을 수 있습니다.", visitors: "4만", rating: 4.5 },
+  { id: 30, name: "2026 카페&베이커리페어 시즌1", venue: "킨텍스", hall: "전시홀 10A", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.06.04 ~ 06.07", dateStart: "2026-06-04", dateEnd: "2026-06-07", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-05-30", image: "🥐", color: "#D2B48C", desc: "카페 운영 및 베이킹 전문 박람회입니다. 에스프레소 머신, 원두, 베이킹 재료, 조리 도구 등이 전시됩니다.", visitors: "3만", rating: 4.5 },
+  { id: 31, name: "대한민국 국제 관광박람회", venue: "킨텍스", hall: "전시홀 10", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.07.03 ~ 07.05", dateStart: "2026-07-03", dateEnd: "2026-07-05", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-06-28", image: "🗽", color: "#1E90FF", desc: "국내외 관광지 및 관광상품 홍보 박람회입니다. 항공사, 호텔, 랜드마크, 테마파크 등에서 관광상품과 할인정보를 제공합니다.", visitors: "5만", rating: 4.6 },
+  { id: 32, name: "2026 생활낚시박람회", venue: "킨텍스", hall: "전시홀 10B", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.08.21 ~ 08.23", dateStart: "2026-08-21", dateEnd: "2026-08-23", category: "스포츠·레저", free: true, price: "무료(사전등록)", regDeadline: "2026-08-16", image: "🎣", color: "#4169E1", desc: "생활 낚시 용품 전문 박람회입니다. 낚시대, 릴, 미끼, 낚시복 등 초보자부터 전문가까지 필요한 모든 낚시용품이 전시됩니다.", visitors: "2만", rating: 4.4, regUrl: "https://www.kintex.com/web/ko/event/view.do?seq=2025044120" },
+  { id: 33, name: "한국국제가구 및 인테리어산업대전 (코펀)", venue: "킨텍스", hall: "전시홀 7,8", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.08.27 ~ 08.30", dateStart: "2026-08-27", dateEnd: "2026-08-30", category: "가구·인테리어", free: true, price: "무료(사전등록)", regDeadline: "2026-08-22", image: "🛏️", color: "#8B4513", desc: "가구 및 인테리어 산업의 국제 박람회입니다. 침실용품, 거실 가구, 조명, 데코 소품, 인테리어 트렌드가 전시됩니다.", visitors: "5만", rating: 4.7 },
+  { id: 34, name: "2026 TEX+VISION", venue: "킨텍스", hall: "전시홀 10", location: "경기 고양시 일산", country: "KR", flag: "🇰🇷", date: "2026.10.21 ~ 10.23", dateStart: "2026-10-21", dateEnd: "2026-10-23", category: "패션", free: true, price: "무료(사전등록)", regDeadline: "2026-10-16", image: "👕", color: "#FF1493", desc: "섬유 및 패션 산업 박람회입니다. 원단, 패션소재, 의류 제조 기술, 패션트렌드를 선보이는 행사입니다.", visitors: "3만", rating: 4.5 },
+  { id: 35, name: "서울국제스포츠레저산업전", venue: "코엑스", hall: "Hall A,B,C", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.03.26 ~ 03.29", dateStart: "2026-03-26", dateEnd: "2026-03-29", category: "스포츠·레저", free: true, price: "무료(사전등록)", regDeadline: "2026-03-21", image: "⚽", color: "#FF6347", desc: "스포츠 용품 및 레저활동 관련 박람회입니다. 운동복, 신발, 스포츠 기구, 피트니스 장비, 야외활동용품이 전시됩니다.", visitors: "5만", rating: 4.6 },
+  { id: 36, name: "2026 상반기 해외 유학 이민 박람회", venue: "코엑스", hall: "Hall D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.03.28 ~ 03.29", dateStart: "2026-03-28", dateEnd: "2026-03-29", category: "교육", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-23", image: "🎓", color: "#4169E1", desc: "해외 대학 및 어학원 정보 박람회입니다. 미국, 호주, 캐나다, 영국 등 주요 유학국가의 교육기관 입시정보를 얻을 수 있습니다.", visitors: "2만", rating: 4.3 },
+  { id: 37, name: "2026 상반기 IFS 프랜차이즈 창업·산업 박람회", venue: "코엑스", hall: "Hall C,D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.02 ~ 04.04", dateStart: "2026-04-02", dateEnd: "2026-04-04", category: "창업", free: true, price: "무료(사전등록)", regDeadline: "2026-03-28", image: "💼", color: "#FFD700", desc: "프랜차이즈 창업 정보 박람회입니다. 식음료, 편의점, 서비스 프랜차이즈의 가맹점 모집정보와 사업설명회가 개최됩니다.", visitors: "4만", rating: 4.5 },
+  { id: 38, name: "2026서울국제불교박람회&제14회 붓다아트페어", venue: "코엑스", hall: "Hall B", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.02 ~ 04.05", dateStart: "2026-04-02", dateEnd: "2026-04-05", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-28", image: "🏯", color: "#DAA520", desc: "불교문화 및 불교미술 박람회입니다. 불상, 탱화, 불교경전, 불교용품, 명상용품 등 불교 관련 문화상품이 전시됩니다.", visitors: "3만", rating: 4.4 },
+  { id: 39, name: "제49회 베페 베이비페어", venue: "코엑스", hall: "Hall A", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.02 ~ 04.05", dateStart: "2026-04-02", dateEnd: "2026-04-05", category: "육아", free: true, price: "무료(사전등록)", regDeadline: "2026-03-28", image: "🍼", color: "#FFB6C1", desc: "영아용품 및 임산부용품 박람회입니다. 유모차, 유아복, 이유식, 아기용품 등 0~3세 영아 전용 제품이 전시됩니다.", visitors: "4만", rating: 4.6 },
+  { id: 40, name: "한국전자제조산업전 x 오토모티브월드코리아", venue: "코엑스", hall: "Hall A", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.08 ~ 04.10", dateStart: "2026-04-08", dateEnd: "2026-04-10", category: "IT·전자", free: true, price: "무료(사전등록)", regDeadline: "2026-04-03", image: "📱", color: "#1C1C1C", desc: "전자 제조 및 자동차 산업 박람회입니다. 자동차 부품, 전자부품, 반도체, 배터리 등 첨단 제조 제품이 전시됩니다.", visitors: "5만", rating: 4.6, regUrl: "https://www.kintex.com/web/ko/event/list.do" },
+  { id: 41, name: "AIR FAIR 2026 국제 기후테크 공기산업 박람회", venue: "코엑스", hall: "Hall B", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.08 ~ 04.10", dateStart: "2026-04-08", dateEnd: "2026-04-10", category: "환경·에너지", free: true, price: "무료(사전등록)", regDeadline: "2026-04-03", image: "💨", color: "#87CEEB", desc: "공기청정 및 기후테크 산업 박람회입니다. 공기청정기, 환기시스템, 미세먼지 제거기, 이산화탄소 감축 기술이 전시됩니다.", visitors: "3만", rating: 4.5 },
+  { id: 42, name: "2026 화랑미술제", venue: "코엑스", hall: "Hall C,D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.08 ~ 04.12", dateStart: "2026-04-08", dateEnd: "2026-04-12", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-03", image: "🎨", color: "#FF69B4", desc: "현대미술 화랑 연합전입니다. 유명 화랑의 작품 전시 및 판매, 미술품 감정, 컬렉터 미팅이 개최됩니다.", visitors: "3만", rating: 4.7 },
+  { id: 43, name: "2026 서울커피엑스포", venue: "코엑스", hall: "Hall A,B", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.15 ~ 04.18", dateStart: "2026-04-15", dateEnd: "2026-04-18", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-04-10", image: "☕", color: "#8B4513", desc: "커피 산업 전문 박람회입니다. 원두, 에스프레소 머신, 커피용품, 카페 인테리어, 커피 교육 프로그램이 전시됩니다.", visitors: "4만", rating: 4.7 },
+  { id: 44, name: "대한민국맥주박람회 & 드링크서울", venue: "코엑스", hall: "Hall C", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.16 ~ 04.18", dateStart: "2026-04-16", dateEnd: "2026-04-18", category: "식음료", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-11", image: "🍺", color: "#FFD700", desc: "맥주 및 음료 박람회입니다. 국내외 맥주, 수입맥주, 칵테일, 음료 브랜드의 시식 및 구매 기회가 제공됩니다.", visitors: "3만", rating: 4.5 },
+  { id: 45, name: "2026 한국국제베이커리페어", venue: "코엑스", hall: "Hall D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.16 ~ 04.19", dateStart: "2026-04-16", dateEnd: "2026-04-19", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-04-11", image: "🥖", color: "#D2B48C", desc: "베이킹 산업 박람회입니다. 밀가루, 설탕, 버터, 향신료, 베이킹 도구, 오븐, 데코용품이 전시됩니다.", visitors: "3만", rating: 4.5 },
+  { id: 46, name: "2026 우수급식외식산업전", venue: "코엑스", hall: "Hall D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.21 ~ 04.23", dateStart: "2026-04-21", dateEnd: "2026-04-23", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-04-16", image: "🍽️", color: "#FF6347", desc: "단체급식 및 외식산업 박람회입니다. 급식용 식재료, 주방기구, 식재 공급업체, 조리 솔루션이 전시됩니다.", visitors: "2만", rating: 4.3 },
+  { id: 47, name: "월드IT쇼", venue: "코엑스", hall: "Hall A,B1,C", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.22 ~ 04.24", dateStart: "2026-04-22", dateEnd: "2026-04-24", category: "IT·전자", free: true, price: "무료(사전등록)", regDeadline: "2026-04-17", image: "💻", color: "#1C1C1C", desc: "정보통신 및 IT 산업 박람회입니다. 서버, 네트워크, 보안솔루션, 클라우드, 빅데이터 기술 등이 전시됩니다.", visitors: "5만", rating: 4.7 },
+  { id: 48, name: "2026 서울 일러스트코리아", venue: "코엑스", hall: "Hall B2", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.23 ~ 04.26", dateStart: "2026-04-23", dateEnd: "2026-04-26", category: "디자인", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-18", image: "🎭", color: "#9370DB", desc: "일러스트레이션 및 디자인 박람회입니다. 디지털 일러스트, 캐릭터 디자인, 그래픽 디자인, 디자인 서비스가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 49, name: "K-MEX 2026 한의약 및 통합의약 국제산업박람회", venue: "코엑스", hall: "Hall D", location: "서울 강남구 삼성동", country: "KR", flag: "🇰🇷", date: "2026.04.25 ~ 04.26", dateStart: "2026-04-25", dateEnd: "2026-04-26", category: "의료·바이오", free: true, price: "무료(사전등록)", regDeadline: "2026-04-20", image: "🌿", color: "#228B22", desc: "한의약 및 통합의약 산업 박람회입니다. 한약재, 의료기기, 침구, 뜸, 한의학 솔루션이 전시됩니다.", visitors: "2만", rating: 4.4 },
+  { id: 50, name: "제10회 푸드테크 비건페스타&그린페스타", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.03.27 ~ 03.29", dateStart: "2026-03-27", dateEnd: "2026-03-29", category: "식음료", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-22", image: "🥗", color: "#228B22", desc: "비건 식품 및 친환경 식품 박람회입니다. 식물성 식품, 대체육, 비건 간식, 유기농 제품이 전시되고 시식행사가 개최됩니다.", visitors: "2만", rating: 4.6 },
+  { id: 51, name: "SMKX 2026 서울 기계식 키보드 박람회", venue: "세텍", hall: "제3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.03.28 ~ 03.29", dateStart: "2026-03-28", dateEnd: "2026-03-29", category: "IT·전자", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-23", image: "⌨️", color: "#696969", desc: "기계식 키보드 전문 박람회입니다. 다양한 스위치, 키보드 커스터마이징, 게이밍 키보드, 입력장치가 전시됩니다.", visitors: "1만", rating: 4.5 },
+  { id: 52, name: "ART OnO 2026", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.04.02 ~ 04.05", dateStart: "2026-04-02", dateEnd: "2026-04-05", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-28", image: "🖼️", color: "#FF1493", desc: "온라인 미술 박람회입니다. 신진 미술가의 작품, 아트상품, 미술교육, 미술용품 및 디지털 아트가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 53, name: "2026 보드게임페스타 시즌1", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.04.11 ~ 04.12", dateStart: "2026-04-11", dateEnd: "2026-04-12", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-06", image: "🎲", color: "#FF6347", desc: "보드게임 및 카드게임 박람회입니다. 국내외 보드게임, 카드게임, 게임용품, 게이밍 액세서리, 게임 방송이 전시됩니다.", visitors: "2만", rating: 4.6 },
+  { id: 54, name: "웨딩&혼수 박람회", venue: "세텍", hall: "제2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.04.18 ~ 04.19", dateStart: "2026-04-18", dateEnd: "2026-04-19", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-13", image: "💒", color: "#FFB6C1", desc: "웨딩 및 혼수용품 박람회입니다. 웨딩드레스, 예식장, 웨딩홀, 혼수용품, 신혼집 가구, 결혼정보회사가 참여합니다.", visitors: "2만", rating: 4.5 },
+  { id: 55, name: "2026 서울건축박람회 춘계", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.04.23 ~ 04.26", dateStart: "2026-04-23", dateEnd: "2026-04-26", category: "건축", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-18", image: "🏗️", color: "#696969", desc: "건축 및 건설 자재 박람회입니다. 건설기계, 건축자재, 인테리어 자재, 신기술, 안전용품이 전시됩니다.", visitors: "3만", rating: 4.6 },
+  { id: 56, name: "제17회 뱅크아트페어", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.04.30 ~ 05.03", dateStart: "2026-04-30", dateEnd: "2026-05-03", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-25", image: "🎪", color: "#DAA520", desc: "미술품 판매 및 아트 수집 박람회입니다. 회화, 조각, 도예, 사진, 판화 등 다양한 미술작품과 미술품 감정이 제공됩니다.", visitors: "2만", rating: 4.6 },
+  { id: 57, name: "제3회 2026 관상어 파충류 박람회", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.09 ~ 05.10", dateStart: "2026-05-09", dateEnd: "2026-05-10", category: "반려동물", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-04", image: "🐠", color: "#20B2AA", desc: "관상어 및 파충류 전문 박람회입니다. 열대어, 금붕어, 뱀, 도마뱀, 거북이 등 특수 반려동물 및 사육용품이 전시됩니다.", visitors: "1만", rating: 4.4 },
+  { id: 58, name: "서울아트페어", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.14 ~ 05.17", dateStart: "2026-05-14", dateEnd: "2026-05-17", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-09", image: "🖌️", color: "#9370DB", desc: "서울 주요 화랑 및 미술관의 작품 판매 박람회입니다. 현대미술, 한국미술, 전통미술 등 다양한 장르의 미술작품이 전시됩니다.", visitors: "3만", rating: 4.7 },
+  { id: 59, name: "2026 서울베이비&키즈페어 Spring", venue: "세텍", hall: "제1전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.21 ~ 05.24", dateStart: "2026-05-21", dateEnd: "2026-05-24", category: "육아", free: true, price: "무료(사전등록)", regDeadline: "2026-05-16", image: "👶", color: "#FFB6C1", desc: "아기 및 키즈용품 박람회입니다. 유아복, 신발, 장난감, 교구, 유아식품, 유아용 생활용품이 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 60, name: "2026 서울사케페스티벌", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.23 ~ 05.24", dateStart: "2026-05-23", dateEnd: "2026-05-24", category: "식음료", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-18", image: "🍶", color: "#DAA520", desc: "일본 사케 및 한국 전통주 페스티벌입니다. 다양한 품종의 사케, 와인, 맥주의 시식 및 구매, 주류 교육이 제공됩니다.", visitors: "2만", rating: 4.6 },
+  { id: 61, name: "2026 더골프쇼&더캠핑쇼 in서울", venue: "세텍", hall: "제3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.29 ~ 05.31", dateStart: "2026-05-29", dateEnd: "2026-05-31", category: "스포츠·레저", free: true, price: "무료(사전등록)", regDeadline: "2026-05-24", image: "⛳", color: "#228B22", desc: "골프 및 캠핑 용품 박람회입니다. 골프클럽, 골프백, 골프화, 캠핑용품, 스포츠 의류, 야외활동 장비가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 62, name: "라스트 페어 2026", venue: "세텍", hall: "제2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.05.30 ~ 05.31", dateStart: "2026-05-30", dateEnd: "2026-05-31", category: "디자인", free: false, price: "10,000원~15,000원", regDeadline: "2026-05-25", image: "👞", color: "#8B4513", desc: "신발 및 핸드백 박람회입니다. 운동화, 구두, 부츠, 운동복, 핸드백, 액세서리 등 패션 용품이 전시됩니다.", visitors: "1만", rating: 4.4 },
+  { id: 63, name: "하비페어 2026", venue: "세텍", hall: "제1전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.06.06 ~ 06.07", dateStart: "2026-06-06", dateEnd: "2026-06-07", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-06-01", image: "🎮", color: "#FF69B4", desc: "취미용품 및 피규어 박람회입니다. 게임 관련 굿즈, 피규어, 모형, 수집품, 게임 콘솔, 게이밍 액세서리가 전시됩니다.", visitors: "1만", rating: 4.5 },
+  { id: 64, name: "제8회 대한민국민화아트페어", venue: "세텍", hall: "제1전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.06.11 ~ 06.14", dateStart: "2026-06-11", dateEnd: "2026-06-14", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-06-06", image: "🎨", color: "#FF4500", desc: "한국 전통 민화 및 현대 민화 박람회입니다. 작가 작품 전시, 민화 워크숍, 전통공예 체험이 제공됩니다.", visitors: "1만", rating: 4.5 },
+  { id: 65, name: "제27회 제일창업박람회 in서울", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.06.17 ~ 06.20", dateStart: "2026-06-17", dateEnd: "2026-06-20", category: "창업", free: true, price: "무료(사전등록)", regDeadline: "2026-06-12", image: "🚀", color: "#FFD700", desc: "창업 정보 및 가맹점 모집 박람회입니다. 다양한 업종의 가맹점 모집정보, 창업 자금 지원, 사업 컨설팅이 제공됩니다.", visitors: "3만", rating: 4.6 },
+  { id: 66, name: "2026 미트엑스포", venue: "세텍", hall: "제3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.06.18 ~ 06.20", dateStart: "2026-06-18", dateEnd: "2026-06-20", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-06-13", image: "🥩", color: "#8B0000", desc: "육류 및 육가공 산업 박람회입니다. 한우, 돈육, 닭고기, 육가공품, 소시지, 베이컨 등 축산물이 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 67, name: "2026 중앙 재테크 박람회", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.06.26 ~ 06.27", dateStart: "2026-06-26", dateEnd: "2026-06-27", category: "재테크·금융", free: true, price: "무료(사전등록)", regDeadline: "2026-06-21", image: "💰", color: "#FFD700", desc: "재테크 및 금융상품 정보 박람회입니다. 주식, 펀드, 부동산, 보험, 암호화폐 등 다양한 재테크 상품 정보를 얻을 수 있습니다.", visitors: "2만", rating: 4.4 },
+  { id: 68, name: "2026 국제아웃도어캠핑&레포츠페스티벌 서울", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.07.10 ~ 07.12", dateStart: "2026-07-10", dateEnd: "2026-07-12", category: "캠핑·아웃도어", free: true, price: "무료(사전등록)", regDeadline: "2026-07-05", image: "🏕️", color: "#228B22", desc: "아웃도어 및 캠핑 전문 박람회입니다. 텐트, 캐빈, 카라반, 캠핑용품, 낚시장비, 등산용품이 전시됩니다.", visitors: "3만", rating: 4.6 },
+  { id: 69, name: "제5회 DV World Seoul 2026", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.07.18 ~ 07.19", dateStart: "2026-07-18", dateEnd: "2026-07-19", category: "IT·전자", free: false, price: "10,000원~15,000원", regDeadline: "2026-07-13", image: "🎥", color: "#1C1C1C", desc: "영상 및 드론 기술 박람회입니다. DSLR, 미러리스, 드론, 짐벌, 렌즈, 영상제작 소프트웨어가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 70, name: "2026 코리아렙타일쇼", venue: "세텍", hall: "제3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.07.18 ~ 07.19", dateStart: "2026-07-18", dateEnd: "2026-07-19", category: "반려동물", free: false, price: "10,000원~15,000원", regDeadline: "2026-07-13", image: "🦎", color: "#8FBC8F", desc: "파충류 전문 박람회입니다. 뱀, 도마뱀, 거북이, 이구아나 등 파충류 종과 사육용품, 먹이, 케이지가 전시됩니다.", visitors: "1만", rating: 4.4 },
+  { id: 71, name: "제2회 대한민국 대표 중소기업 박람회", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.07.22 ~ 07.24", dateStart: "2026-07-22", dateEnd: "2026-07-24", category: "산업·제조", free: true, price: "무료(사전등록)", regDeadline: "2026-07-17", image: "🏢", color: "#696969", desc: "우수 중소기업 홍보 박람회입니다. 제조업, 서비스업, IT기업 등 다양한 중소기업의 제품과 기술이 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 72, name: "2026 가낳지모 캣페어 SUMMER", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.07.31 ~ 08.02", dateStart: "2026-07-31", dateEnd: "2026-08-02", category: "반려동물", free: false, price: "10,000원~15,000원", regDeadline: "2026-07-26", image: "🐱", color: "#FF69B4", desc: "고양이 애호가 페스티벌입니다. 고양이 품종 전시, 고양이 용품, 사료, 의류, 액세서리, 고양이 관련 굿즈가 전시됩니다.", visitors: "2만", rating: 4.6 },
+  { id: 73, name: "2026 서울 카페&베이커리페어 시즌2", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.08.27 ~ 08.30", dateStart: "2026-08-27", dateEnd: "2026-08-30", category: "식음료", free: true, price: "무료(사전등록)", regDeadline: "2026-08-22", image: "☕", color: "#D2B48C", desc: "카페 운영 및 베이킹 전문 박람회입니다. 커피머신, 원두, 베이킹 재료, 카페 시스템, 디저트 용품이 전시됩니다.", visitors: "3만", rating: 4.6 },
+  { id: 74, name: "코사운드 스테이지테크 2026", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.09.02 ~ 09.04", dateStart: "2026-09-02", dateEnd: "2026-09-04", category: "IT·전자", free: true, price: "무료(사전등록)", regDeadline: "2026-08-28", image: "🎵", color: "#FFD700", desc: "음향 및 무대 기술 박람회입니다. 스피커, 마이크, 조명, 무대음향, 라이브 스트리밍 기술이 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 75, name: "2026 코리아 이커머스 페어", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.09.17 ~ 09.19", dateStart: "2026-09-17", dateEnd: "2026-09-19", category: "IT·전자", free: true, price: "무료(사전등록)", regDeadline: "2026-09-12", image: "🛒", color: "#1E90FF", desc: "전자상거래 솔루션 박람회입니다. 쇼핑몰 시스템, 결제솔루션, 배송관리, 고객관리 소프트웨어가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 76, name: "2026 코리아 러닝 엑스포", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.10.29 ~ 10.31", dateStart: "2026-10-29", dateEnd: "2026-10-31", category: "스포츠·레저", free: true, price: "무료(사전등록)", regDeadline: "2026-10-24", image: "🏃", color: "#FF6347", desc: "마라톤 및 러닝 전문 박람회입니다. 러닝화, 스포츠 의류, GPS워치, 보조용품, 러닝 이벤트 정보가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 77, name: "2026 서울건축박람회 추계", venue: "세텍", hall: "제1·2·3전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.11.05 ~ 11.08", dateStart: "2026-11-05", dateEnd: "2026-11-08", category: "건축", free: false, price: "10,000원~15,000원", regDeadline: "2026-10-31", image: "🏗️", color: "#696969", desc: "건축 산업의 가을 박람회입니다. 건설기계, 건축자재, 인테리어, 신기술, 안전용품 등이 전시됩니다.", visitors: "3만", rating: 4.6 },
+  { id: 78, name: "2027 대한민국 재테크박람회", venue: "세텍", hall: "제1·2전시실", location: "서울 강남구 대치동", country: "KR", flag: "🇰🇷", date: "2026.11.27 ~ 11.28", dateStart: "2026-11-27", dateEnd: "2026-11-28", category: "재테크·금융", free: true, price: "무료(사전등록)", regDeadline: "2026-11-22", image: "📈", color: "#FFD700", desc: "개인재무 및 투자 정보 박람회입니다. 펀드, 주식, 적금, 보험, 부동산 투자, 재테크 강좌가 제공됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 79, name: "2026 소상공인 힘보탬 박람회", venue: "DDP", hall: "알림1·2관", location: "서울 중구 을지로", country: "KR", flag: "🇰🇷", date: "2026.03.26 ~ 03.27", dateStart: "2026-03-26", dateEnd: "2026-03-27", category: "창업", free: true, price: "무료(사전등록)", regDeadline: "2026-03-21", image: "🤝", color: "#FFD700", desc: "소상공인 지원 및 가맹점 정보 박람회입니다. 창업 정보, 금융 지원, 사업 컨설팅, 마케팅 전략이 제공됩니다.", visitors: "1만", rating: 4.3 },
+  { id: 80, name: "PSID 2026 국제섬유패션 전시회", venue: "DDP", hall: "알림1·2관", location: "서울 중구 을지로", country: "KR", flag: "🇰🇷", date: "2026.04.01 ~ 04.03", dateStart: "2026-04-01", dateEnd: "2026-04-03", category: "패션", free: true, price: "무료(사전등록)", regDeadline: "2026-03-27", image: "👗", color: "#FF1493", desc: "섬유 및 패션 산업 박람회입니다. 원단, 패션소재, 의류 기계, 패턴 기술, 옷감 트렌드가 전시됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 81, name: "OFF COURSE CLUB", venue: "DDP", hall: "알림1관", location: "서울 중구 을지로", country: "KR", flag: "🇰🇷", date: "2026.04.03 ~ 04.26", dateStart: "2026-04-03", dateEnd: "2026-04-26", category: "문화·엔터", free: false, price: "10,000원~15,000원", regDeadline: "2026-03-29", image: "🎪", color: "#FF69B4", desc: "팝업 전시 및 문화이벤트 공간입니다. 예술작품, 공예품, 라이브 공연, 팝업숍이 정기적으로 운영됩니다.", visitors: "2만", rating: 4.5 },
+  { id: 82, name: "키크니 특별전 : 그렸고 그런 사이", venue: "DDP", hall: "뮤지엄", location: "서울 중구 을지로", country: "KR", flag: "🇰🇷", date: "2026.04.25 ~ 09.06", dateStart: "2026-04-25", dateEnd: "2026-09-06", category: "아트", free: false, price: "10,000원~15,000원", regDeadline: "2026-04-20", image: "🖼️", color: "#9370DB", desc: "현대미술 특별전시입니다. 한국 현대미술 작가의 작품 전시, 설치미술, 미디어아트, 아트워크숍이 제공됩니다.", visitors: "2만", rating: 4.7 }
+];
+
+// file:// 프로토콜에서는 fetch 불가 → 바로 내장 데이터 사용
+window._d=FALLBACK;_allData=FALLBACK;render(window._d);
+</script>
+</body>
+</html>
