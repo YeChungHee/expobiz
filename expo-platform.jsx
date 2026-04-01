@@ -119,6 +119,12 @@ body{font-family:${FONT};background:#e8e8ec}
 .section-dot{width:8px;height:8px;border-radius:4px}
 .section-title{font-size:15px;font-weight:900}
 .section-count{font-size:12px;color:${P.sub};font-weight:600;margin-left:auto}
+
+
+.detail-nav-btn:hover { background:rgba(255,255,255,.35) !important; transform:scale(1.08); }
+.detail-nav-btn:active { transform:scale(0.95); }
+.car-arrow:hover { background:rgba(255,255,255,1) !important; box-shadow:0 4px 16px rgba(0,0,0,0.15) !important; transform:translateY(-50%) scale(1.08) !important; }
+.car-arrow:active { transform:translateY(-50%) scale(0.95) !important; }
 `;
 
 /* ─── Google Sheets API 엔드포인트 ─── */
@@ -656,8 +662,26 @@ function Carousel({ children, groupKey }) {
     return diff;
   };
 
+  const arrowBtn = (dir) => ({
+    position:"absolute", top:"50%", transform:"translateY(-50%)",
+    [dir === -1 ? "left" : "right"]: -2,
+    width:36, height:36, borderRadius:18,
+    background:"rgba(255,255,255,0.85)", backdropFilter:"blur(8px)",
+    border:"1px solid rgba(0,0,0,0.06)",
+    boxShadow:"0 2px 12px rgba(0,0,0,0.10)",
+    display:"flex", alignItems:"center", justifyContent:"center",
+    cursor:"pointer", zIndex:20, fontSize:15, color:"#374151",
+    transition:"all .2s",
+  });
+
   return (
-    <div>
+    <div style={{ position:"relative" }}>
+      {total > 1 && (
+        <button onClick={() => go(-1)} style={arrowBtn(-1)} className="car-arrow">‹</button>
+      )}
+      {total > 1 && (
+        <button onClick={() => go(1)} style={arrowBtn(1)} className="car-arrow">›</button>
+      )}
       <div className="am-wrap"
         onTouchStart={e => onStart(e.touches[0].clientX)}
         onTouchMove={e => onMove(e.touches[0].clientX)}
@@ -734,6 +758,8 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [prev, setPrev] = useState(null);
   const [expo, setExpo] = useState(null);
+  const [detailList, setDetailList] = useState([]);
+  const [detailIndex, setDetailIndex] = useState(0);
   const [detailTab, setDetailTab] = useState("info");
   const [country, setCountry] = useState("ALL");
   const [cat, setCat] = useState("전체");
@@ -753,7 +779,16 @@ export default function App() {
   const [editProfile, setEditProfile] = useState(false);
   const [myTab, setMyTab] = useState("regs"); // regs | liked | visited | settings
 
-  const go = (s, e = null) => { setPrev(screen); if (e) setExpo(e); setScreen(s); setDetailTab("info"); setStep(1); setDone(false); };
+  const go = (s, e = null, list = null, listIdx = -1) => { setPrev(screen); if (e) setExpo(e); if (list) { setDetailList(list); setDetailIndex(listIdx >= 0 ? listIdx : 0); } setScreen(s); setDetailTab("info"); setStep(1); setDone(false); };
+  const goDetailNav = (dir) => {
+    if (!detailList.length) return;
+    const newIdx = dir === -1
+      ? (detailIndex <= 0 ? detailList.length - 1 : detailIndex - 1)
+      : (detailIndex >= detailList.length - 1 ? 0 : detailIndex + 1);
+    setDetailIndex(newIdx);
+    setExpo(detailList[newIdx]);
+    setDetailTab("info");
+  };
   const back = () => { setScreen(prev || "home"); setModal(false); };
 
   const handleAuth = async () => {
@@ -1051,7 +1086,7 @@ export default function App() {
 
                     {/* 3D carousel */}
                     <Carousel groupKey={group.key + statusFilter + venueFilter + country + cat + search}>
-                      {group.items.map((ex) => {
+                      {group.items.map((ex, exIdx) => {
                         const dday = getDday(ex.dateEnd);
                         const regUrg = getRegUrgency(ex.regDeadline);
                         const regAvail = getRegAvailability(ex);
@@ -1077,7 +1112,7 @@ export default function App() {
                           </div>
                         );
                         return (
-                          <div key={ex.id} style={{ cursor:"pointer", opacity: ex.expoStatus === "past" ? 0.7 : 1, borderRadius:20, overflow:"hidden" }} onClick={() => go("detail", ex)}>
+                          <div key={ex.id} style={{ cursor:"pointer", opacity: ex.expoStatus === "past" ? 0.7 : 1, borderRadius:20, overflow:"hidden" }} onClick={() => go("detail", ex, group.items, exIdx)}>
                             {/* Apple Music 스타일 큰 카드 */}
                             <div style={{ background: grad, padding:"22px 20px 18px", position:"relative", minHeight:320, boxShadow:"inset 0 0 80px rgba(0,0,0,.15)" }}>
                               {/* 장식 원 */}
@@ -1143,7 +1178,16 @@ export default function App() {
                 {/* hero */}
                 <div style={{ background:`linear-gradient(165deg, ${expo.color}dd, ${expo.color}88, ${expo.color}44)`, padding:"52px 20px 28px", position:"relative", overflow:"hidden" }}>
                   <div style={{ position:"absolute", top:-30, right:-30, width:140, height:140, borderRadius:70, background:`radial-gradient(circle,rgba(255,255,255,.15),transparent 70%)` }} />
-                  <button onClick={back} style={{ background:"rgba(255,255,255,.18)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,.2)", borderRadius:14, padding:"8px 16px", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", marginBottom:18, fontFamily:FONT }}>← 뒤로</button>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+                    <button onClick={back} style={{ background:"rgba(255,255,255,.18)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,.2)", borderRadius:14, padding:"8px 16px", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>← 뒤로</button>
+                    {detailList.length > 1 && (
+                      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                        <button onClick={() => goDetailNav(-1)} className="detail-nav-btn" style={{ background:"rgba(255,255,255,.18)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,.2)", borderRadius:12, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:16, fontWeight:700, cursor:"pointer", transition:"all .2s" }}>‹</button>
+                        <span style={{ color:"rgba(255,255,255,.7)", fontSize:12, fontWeight:600, minWidth:40, textAlign:"center" }}>{detailIndex + 1} / {detailList.length}</span>
+                        <button onClick={() => goDetailNav(1)} className="detail-nav-btn" style={{ background:"rgba(255,255,255,.18)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,.2)", borderRadius:12, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:16, fontWeight:700, cursor:"pointer", transition:"all .2s" }}>›</button>
+                      </div>
+                    )}
+                  </div>
                   <div style={{ fontSize:56, marginBottom:14 }}>{expo.image}</div>
                   <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
                     <span className="bdg bdg-glass">{expo.free ? "✓ 무료" : expo.price}</span>
@@ -1775,7 +1819,7 @@ export default function App() {
                       <div style={{ fontSize:12, color:P.sub }}>관심있는 전시회에 하트를 눌러보세요!</div>
                     </div>
                   ) : EXHIBITIONS.filter(e => liked[e.id]).map(ex => (
-                    <div key={ex.id} className="g-card" style={{ padding:14, marginBottom:10, cursor:"pointer" }} onClick={() => go("detail", ex)}>
+                    <div key={ex.id} className="g-card" style={{ padding:14, marginBottom:10, cursor:"pointer" }} onClick={() => go("detail", ex, filtered, filtered.indexOf(ex))}>
                       <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                         <div style={{ width:48, height:48, borderRadius:14, background:`linear-gradient(135deg,${ex.color}22,${ex.color}44)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{ex.image}</div>
                         <div style={{ flex:1 }}>

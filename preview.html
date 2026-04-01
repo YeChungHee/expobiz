@@ -14,6 +14,13 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#f5f
 .scroll::-webkit-scrollbar{display:none}
 .bdg{display:inline-block;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700}
 .am-wrap{position:relative;height:330px;overflow:hidden;margin:0 20px;cursor:grab}
+.car-arrow{position:absolute;top:50%;width:36px;height:36px;border-radius:18px;background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.10);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;font-size:15px;color:#374151;transition:all .2s;transform:translateY(-50%)}
+.car-arrow:hover{background:rgba(255,255,255,1);box-shadow:0 4px 16px rgba(0,0,0,0.15);transform:translateY(-50%) scale(1.08)}
+.car-arrow:active{transform:translateY(-50%) scale(0.95)}
+.car-arrow-l{left:-2px}.car-arrow-r{right:-2px}
+.detail-nav-btn{background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s}
+.detail-nav-btn:hover{background:rgba(255,255,255,.35);transform:scale(1.08)}
+.detail-nav-btn:active{transform:scale(0.95)}
 .am-wrap:active{cursor:grabbing}
 .am-card{position:absolute;width:100%;left:0;top:0;border-radius:20px;overflow:hidden;will-change:transform,opacity,filter;transform-origin:center center}
 .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#6b7280;font-size:14px;font-weight:600;gap:12px}
@@ -152,6 +159,8 @@ const today = new Date(); today.setHours(0,0,0,0);
 const cStates = {};
 let currentTab = 'home';
 let _allData = [];
+let _detailList = [];
+let _detailIndex = 0;
 let _favorites = []; // 즐겨찾기 ID 목록
 
 /* ─── 알림 시스템 ─── */
@@ -496,7 +505,7 @@ function filterSearch(){
   box.innerHTML = matched.slice(0,20).map(ex => {
     const tc = THEME[ex.category]||ex.color||'#607D8B';
     const ra = getRegAvail(ex);
-    return `<div onclick='showDetail(window._d.find(e=>e.id===${ex.id}))' style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid rgba(0,0,0,.04)">
+    return `<div onclick='showDetail(window._d.find(e=>e.id===${ex.id}),window._d||[],window._d?window._d.findIndex(e=>e.id===${ex.id}):-1)' style="background:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid rgba(0,0,0,.04)">
       <div style="width:44px;height:44px;border-radius:12px;background:${tc};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${ex.image}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:800;color:#1e1e2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ex.name}</div>
@@ -519,7 +528,17 @@ function updateDetailFavBtn(id){
   showToast(f?'관심 전시회에 저장했습니다':'관심 전시회에서 제거했습니다');
 }
 
-function showDetail(ex){
+
+function goDetailNav(dir){
+  if(!_detailList.length)return;
+  const ni=dir===-1
+    ?(_detailIndex<=0?_detailList.length-1:_detailIndex-1)
+    :(_detailIndex>=_detailList.length-1?0:_detailIndex+1);
+  _detailIndex=ni;
+  showDetail(_detailList[ni],_detailList,ni);
+}
+function showDetail(ex, list, listIdx){
+  if(list){ _detailList=list; _detailIndex=listIdx>=0?listIdx:0; }
   window._detailEx = ex; // 공유 기능에서 사용
   const ov=document.getElementById('detail-overlay');
   const dc=document.getElementById('detail-content');
@@ -529,7 +548,14 @@ function showDetail(ex){
   dc.innerHTML=`
     <div style="background:linear-gradient(165deg,${tc}dd,${tc}88,${tc}44);padding:52px 20px 28px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:70px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%)"></div>
-      <button onclick="hideDetail()" style="background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:18px;font-family:'Noto Sans KR',sans-serif">← 뒤로</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <button onclick="hideDetail()" style="background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">← 뒤로</button>
+        ${_detailList.length>1?`<div style="display:flex;gap:8px;align-items:center">
+          <button onclick="goDetailNav(-1)" class="detail-nav-btn">‹</button>
+          <span style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;min-width:40px;text-align:center">${_detailIndex+1} / ${_detailList.length}</span>
+          <button onclick="goDetailNav(1)" class="detail-nav-btn">›</button>
+        </div>`:''}
+      </div>
       <div style="font-size:56px;margin-bottom:14px">${ex.image}</div>
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
         <span class="bdg" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">${ex.free?'✓ 무료':ex.price||'유료'}</span>
@@ -608,9 +634,21 @@ function getRegAvail(ex){
   return{status:"확인중",label:"확인중",color:"#f59e0b",bg:"rgba(245,158,11,.08)",icon:"🟡",avail:false};
 }
 
+const _carItems={};
+function carNav(cid,dir){
+  const items=_carItems[cid];if(!items)return;
+  const tot=items.length,idx=cStates[cid]||0;
+  let ni=idx+dir;if(ni<0)ni=tot-1;if(ni>=tot)ni=0;
+  cStates[cid]=ni;renderC(cid,items);
+}
 function renderC(cid,items){
+  _carItems[cid]=items;
   const w=document.getElementById('wrap-'+cid);if(!w)return;
   const idx=cStates[cid]||0,tot=items.length;w.innerHTML='';
+  // 화살표 표시/숨김
+  const al=document.getElementById('arr-l-'+cid),ar=document.getElementById('arr-r-'+cid);
+  if(al)al.style.display=tot>1?'flex':'none';
+  if(ar)ar.style.display=tot>1?'flex':'none';
   items.forEach((ex,i)=>{
     let df=i-idx;if(df<-1)df+=tot;if(df>tot-1)df-=tot;
     let tx,sc,op,bl,z;
@@ -647,7 +685,7 @@ function renderC(cid,items){
         <div style="margin-top:8px"><span class="bdg" style="background:${raBg};color:#fff;font-size:10px;font-weight:800;${raBorder};${raAnim}">${ra.icon} ${ra.label}</span></div>
       </div>`;
     }
-    c.onclick=()=>{if(df===0&&!ex.isPlaceholder)showDetail(ex);};
+    c.onclick=()=>{if(df===0&&!ex.isPlaceholder)showDetail(ex,items,i);};
     w.appendChild(c);
   });
   const dots=document.getElementById('dots-'+cid);
@@ -698,7 +736,7 @@ function render(exs){
     if(g.k==='upcoming')items=[...items,updateCard];
     const cid='c'+gi;cStates[cid]=cStates[cid]||0;
     const s=document.createElement('div');
-    s.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:0 16px;margin-bottom:10px;margin-top:${gi===0?'14':'8'}px"><div style="font-size:15px;font-weight:900;color:#1e1e2e">${g.ic} ${g.l}</div><div style="font-size:12px;color:#6b7280;font-weight:600;margin-left:auto">${items.length}개</div></div><div class="am-wrap" id="wrap-${cid}"></div><div id="dots-${cid}" style="display:flex;justify-content:center;gap:5px;margin-top:6px;margin-bottom:18px"></div>`;
+    s.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:0 16px;margin-bottom:10px;margin-top:${gi===0?'14':'8'}px"><div style="font-size:15px;font-weight:900;color:#1e1e2e">${g.ic} ${g.l}</div><div style="font-size:12px;color:#6b7280;font-weight:600;margin-left:auto">${items.length}개</div></div><div id="car-container-${cid}" style="position:relative"><button class="car-arrow car-arrow-l" id="arr-l-${cid}" onclick="carNav('${cid}',-1)" style="display:none">‹</button><button class="car-arrow car-arrow-r" id="arr-r-${cid}" onclick="carNav('${cid}',1)" style="display:none">›</button><div class="am-wrap" id="wrap-${cid}"></div></div><div id="dots-${cid}" style="display:flex;justify-content:center;gap:5px;margin-top:6px;margin-bottom:18px"></div>`;
     ct.appendChild(s);renderC(cid,items);
   });
 }
