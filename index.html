@@ -133,8 +133,30 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#f5f
     <div id="my-content" style="padding:56px 20px 100px"></div>
   </div>
   <!-- 로그인/회원가입 모달 -->
-  <div id="auth-modal" onclick="if(event.target===this)closeAuth()" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:110;display:none;align-items:center;justify-content:center;padding:20px">
+  <div id="auth-modal" onclick="if(event.target===this)closeAuth()" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:110;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px">
     <div id="auth-box" style="background:#fff;border-radius:24px;width:100%;max-width:353px;overflow:hidden;animation:slideUp .3s ease"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);display:flex;align-items:center;padding:10px 0 env(safe-area-inset-bottom,16px)">
+      <div onclick="closeAuth();switchTab('home')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="1.8"><path d="M3 9.5l9-7 9 7V20a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#c0c0c8">홈</span>
+      </div>
+      <div onclick="closeAuth();switchTab('search')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#c0c0c8">탐색</span>
+      </div>
+      <div onclick="closeAuth();switchTab('qr')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="4" height="4"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#c0c0c8">입장</span>
+      </div>
+      <div onclick="closeAuth();switchTab('plan')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0c0c8" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#c0c0c8">일정</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#6366f1" stroke="#6366f1" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size:10px;font-weight:700;color:#6366f1">MY</span>
+      </div>
+    </div>
   </div>
   <!-- 알림 패널 -->
   <div id="noti-panel" onclick="if(event.target===this)closeNoti()" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:105;display:none">
@@ -160,6 +182,7 @@ const cStates = {};
 let currentTab = 'home';
 let _allData = [];
 let _detailList = [];
+window._rememberMe = true;
 let _detailIndex = 0;
 let _favorites = []; // 즐겨찾기 ID 목록
 
@@ -296,7 +319,7 @@ function showToast(msg){
 /* ─── 인증 시스템 ─── */
 let _user = null; // {name, email, phone}
 // 세션 복원
-try{const su=sessionStorage.getItem('expobiz_user');if(su)_user=JSON.parse(su);}catch(e){}
+try{const su=localStorage.getItem('expobiz_user')||sessionStorage.getItem('expobiz_user');if(su)_user=JSON.parse(su);}catch(e){}
 try{const sf=sessionStorage.getItem('expobiz_fav');if(sf)_favorites=JSON.parse(sf);}catch(e){}
 
 function renderMyPage(){
@@ -369,6 +392,10 @@ function showAuth(mode){
           <input id="auth-pw" type="password" placeholder="비밀번호 입력" style="width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
         </div>
         <div id="auth-err" style="font-size:12px;color:#ef4444;font-weight:600;min-height:18px;margin-bottom:8px"></div>
+        <label id="remember-me-label" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;font-size:13px;color:#6b7280">
+          <div id="remember-check" onclick="event.preventDefault();window._rememberMe=!window._rememberMe;this.style.background=window._rememberMe?'#6366f1':'#fff';this.style.borderColor=window._rememberMe?'#6366f1':'#d1d5db';this.innerHTML=window._rememberMe?'<svg width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><polyline points=\'20 6 9 17 4 12\'/></svg>':''" style="width:20px;height:20px;border-radius:6px;border:2px solid #6366f1;background:#6366f1;display:flex;align-items:center;justify-content:center;transition:all .2s;cursor:pointer;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          로그인 정보 저장
+        </label>
         <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px">로그인</button>
         <div style="text-align:center;font-size:13px;color:#6b7280">계정이 없으신가요? <span onclick="showAuth('signup')" style="color:#6366f1;font-weight:700;cursor:pointer">회원가입</span></div>
       </div>
@@ -416,7 +443,15 @@ function doLogin(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='올바른 이메일 형식이 아닙니다';return;}
   if(pw.length<4){err.textContent='비밀번호가 올바르지 않습니다';return;}
   _user={name:email.split('@')[0], email:email, phone:''};
-  try{sessionStorage.setItem('expobiz_user',JSON.stringify(_user));}catch(e){}
+  try{
+    if(window._rememberMe){
+      localStorage.setItem('expobiz_user',JSON.stringify(_user));
+      sessionStorage.removeItem('expobiz_user');
+    } else {
+      sessionStorage.setItem('expobiz_user',JSON.stringify(_user));
+      localStorage.removeItem('expobiz_user');
+    }
+  }catch(e){}
   closeAuth();
   renderMyPage();
   showToast('로그인 완료! 환영합니다 👋');
@@ -537,6 +572,65 @@ function goDetailNav(dir){
   _detailIndex=ni;
   showDetail(_detailList[ni],_detailList,ni);
 }
+/* ── 입장권 이미지 업로드 ── */
+let _ticketImages = JSON.parse(localStorage.getItem('expokr_ticket_images')||'{}');
+function uploadTicketImage(expoId){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=function(){
+    const file=inp.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const img=new Image();
+      img.onload=function(){
+        const MAX=600;let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        const qrImage=c.toDataURL('image/jpeg',0.85);
+        _ticketImages[String(expoId)]=qrImage;
+        localStorage.setItem('expokr_ticket_images',JSON.stringify(_ticketImages));
+        showToast('입장권이 업로드되었습니다! 🎫');
+        // Re-render detail if open
+        if(window._detailEx && window._detailEx.id==expoId) showDetail(window._detailEx,_detailList,_detailIndex);
+        updateQRPage();
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+function updateQRPage(){
+  const pg=document.getElementById('page-qr');if(!pg)return;
+  const keys=Object.keys(_ticketImages);
+  if(keys.length===0)return;
+  // Show the first ticket
+  const exId=keys[keys.length-1];
+  const ex=(_allData||[]).find(e=>String(e.id)===exId);
+  const name=ex?ex.name:'전시회';
+  const qrImg=_ticketImages[exId];
+  pg.querySelector('div').innerHTML=\`
+    <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">QR 입장권</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px">\${name}</div>
+    <div style="background:rgba(255,255,255,.95);border-radius:24px;padding:24px;margin:0 20px;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+      <div style="display:inline-flex;padding:6px 14px;background:rgba(5,150,105,.08);border-radius:20px;margin-bottom:16px"><span style="font-size:11px;font-weight:800;color:#059669">✅ 입장권 등록완료</span></div>
+      <div style="background:#f8f7ff;border-radius:18px;padding:20px;margin-bottom:12px;border:2px solid rgba(99,102,241,.1)">
+        <img src="\${qrImg}" alt="QR" style="width:200px;height:auto;border-radius:8px;display:block;margin:0 auto" />
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:4px">전시회</div>
+      <div style="font-size:15px;font-weight:900;color:#1e1e2e">\${name}</div>
+    </div>
+    \${keys.length>1?\`<div style="margin-top:20px;padding:0 20px">\${keys.filter(k=>k!==exId).map(k=>{
+      const e2=(_allData||[]).find(e=>String(e.id)===k);
+      return \`<div onclick="_ticketImages._last='\${k}';updateQRPage()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px">
+        <img src="\${_ticketImages[k]}" style="width:40px;height:40px;border-radius:8px;object-fit:cover" />
+        <div style="text-align:left"><div style="font-size:13px;font-weight:700;color:#fff">\${e2?e2.name:'전시회'}</div><div style="font-size:11px;color:rgba(255,255,255,.5)">✅ 등록완료</div></div>
+      </div>\`;
+    }).join('')}</div>\`:''}
+  \`;
+}
+
 function showDetail(ex, list, listIdx){
   if(list){ _detailList=list; _detailIndex=listIdx>=0?listIdx:0; }
   window._detailEx = ex; // 공유 기능에서 사용
@@ -571,6 +665,10 @@ function showDetail(ex, list, listIdx){
     <div style="padding:16px 16px 0;display:flex;gap:10px">
       <button onclick="window.open('${searchUrl}','_blank')" style="flex:2;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">${ex.free?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 무료 참가 신청':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 참관 신청'}</button>
       <button id="detail-fav-btn" onclick="toggleFav(${ex.id},event);updateDetailFavBtn(${ex.id})" style="flex:1;background:${isFav(ex.id)?'rgba(239,68,68,.1)':'rgba(99,102,241,.08)'};color:${isFav(ex.id)?'#ef4444':'#6366f1'};border:1.5px solid ${isFav(ex.id)?'rgba(239,68,68,.3)':'rgba(99,102,241,.2)'};border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav(ex.id)?'#ef4444':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${isFav(ex.id)?'저장됨':'저장'}</button>
+    </div>
+    <div style="padding:8px 16px 0">
+      <input type="file" accept="image/*" id="ticket-upload-html" style="display:none" onchange="if(this.files[0]&&window._detailEx){const exId=window._detailEx.id;const file=this.files[0];const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const MAX=600;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const qrImage=c.toDataURL('image/jpeg',0.85);_ticketImages[String(exId)]=qrImage;localStorage.setItem('expokr_ticket_images',JSON.stringify(_ticketImages));showToast('입장권이 업로드되었습니다! 🎫');showDetail(window._detailEx,_detailList,_detailIndex);updateQRPage()};img.src=e.target.result};reader.readAsDataURL(file);this.value=''}">
+      <button onclick="document.getElementById('ticket-upload-html').click()" style="width:100%;padding:12px 16px;border-radius:14px;border:1.5px dashed ${_ticketImages[String(ex.id)]?'rgba(99,102,241,.4)':'#d1d5db'};background:${_ticketImages[String(ex.id)]?'rgba(99,102,241,.05)':'#f9fafb'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:700;color:${_ticketImages[String(ex.id)]?'#6366f1':'#6b7280'};font-family:'Noto Sans KR',sans-serif;transition:all .2s">${_ticketImages[String(ex.id)]?'<svg width=\'15\' height=\'15\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><path d=\'M22 11.08V12a10 10 0 1 1-5.93-9.14\'/><polyline points=\'22 4 12 14.01 9 11.01\'/></svg> 입장권 업로드 완료 (변경하기)':'<svg width=\'15\' height=\'15\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><path d=\'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\'/><polyline points=\'17 8 12 3 7 8\'/><line x1=\'12\' y1=\'3\' x2=\'12\' y2=\'15\'/></svg> 입장권 QR 업로드'}</button>
     </div>
     <div style="padding:12px 16px 0;display:flex;gap:8px">
       <div onclick="shareExpo(window._detailEx)" style="flex:1;background:rgba(0,0,0,.03);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;border:1px solid rgba(0,0,0,.04);transition:background .15s" onmousedown="this.style.background='rgba(99,102,241,.1)'" onmouseup="this.style.background='rgba(0,0,0,.03)'" ontouchstart="this.style.background='rgba(99,102,241,.1)'" ontouchend="this.style.background='rgba(0,0,0,.03)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> 공유</div>

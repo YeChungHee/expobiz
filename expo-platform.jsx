@@ -348,7 +348,7 @@ function useAuth() {
     setSyncing(false);
     if (!res.ok) return res;
     const loggedUser = res.user;
-    LS.set("expokr_user", loggedUser);
+    if (typeof window._rememberMe === "undefined" || window._rememberMe) LS.set("expokr_user", loggedUser);
     setUser(loggedUser);
     if (res.likes) { const nl = normalizeLikes(res.likes); setLiked(nl); LS.set(`expokr_liked_${loggedUser.id}`, nl); }
     if (res.tickets) { setRegs(res.tickets); LS.set(`expokr_regs_${loggedUser.id}`, res.tickets); }
@@ -375,6 +375,43 @@ function useAuth() {
     apiPost("toggleLike", { userId: user.id, expoId: String(expoId) });
   };
 
+  /* ── 입장권 이미지 업로드 (base64 → localStorage + 서버) ── */
+  const uploadTicketImage = async (expoId, file) => {
+    if (!user || !file) return;
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        // 이미지 리사이징 (최대 600px)
+        const img = new Image();
+        img.onload = async () => {
+          const MAX = 600;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          const qrImage = canvas.toDataURL("image/jpeg", 0.85);
+          // 기존 ticket에 qrImage 추가
+          const updated = regs.map(r => String(r.expoId) === String(expoId) ? { ...r, qrImage, status:"approved" } : r);
+          // 신규 등록이 없으면 새로 생성
+          if (!updated.find(r => String(r.expoId) === String(expoId))) {
+            updated.push({ expoId: String(expoId), qrImage, status:"approved", appliedAt: new Date().toISOString(), persons:1 });
+          }
+          setRegs(updated);
+          LS.set(\`expokr_regs_\${user.id}\`, updated);
+          // 서버에도 저장 시도 (Google Drive 저장용)
+          try { await apiPost("uploadTicket", { userId: user.id, expoId: String(expoId), qrImage }); } catch(e) {}
+          resolve(true);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   /* ── 사전등록 신청 (서버 → QR코드 발급) ── */
   const addReg = async (expoId, visitDate, persons = 1) => {
     if (!user) return;
@@ -398,7 +435,7 @@ function useAuth() {
 
   const markVisited = (expoId) => { setVisited(p => [...new Set([...p, expoId])]); };
 
-  return { user, liked, regs, visited, syncing, signup, login, logout, updateProfile, addReg, cancelReg, toggleLike, markVisited };
+  return { user, liked, regs, visited, syncing, signup, login, logout, updateProfile, addReg, cancelReg, toggleLike, markVisited, uploadTicketImage };
 }
 
 /* ─── 전시장별 실제 주차장 데이터 ─── */
@@ -754,7 +791,7 @@ function Carousel({ children, groupKey }) {
 export default function App() {
   const { exhibitions: EXHIBITIONS, isLoading: sheetLoading, dataSource } = useExhibitionData();
   const auth = useAuth();
-  const { user, liked, regs, visited, syncing, toggleLike, addReg, cancelReg, markVisited } = auth;
+  const { user, liked, regs, visited, syncing, toggleLike, addReg, cancelReg, markVisited, uploadTicketImage } = auth;
   const [screen, setScreen] = useState("home");
   const [prev, setPrev] = useState(null);
   const [expo, setExpo] = useState(null);
@@ -775,6 +812,7 @@ export default function App() {
   const [persons, setPersons] = useState(1);
   const [authMode, setAuthMode] = useState("login"); // login | signup
   const [authForm, setAuthForm] = useState({ name:"", email:"", password:"", company:"", jobTitle:"", phone:"" });
+  const [rememberMe, setRememberMe] = useState(true);
   const [authError, setAuthError] = useState("");
   const [editProfile, setEditProfile] = useState(false);
   const [myTab, setMyTab] = useState("regs"); // regs | liked | visited | settings
@@ -794,6 +832,7 @@ export default function App() {
   const handleAuth = async () => {
     setAuthError("");
     if (authMode === "login") {
+      window._rememberMe = rememberMe;
       const r = await auth.login(authForm.email, authForm.password);
       if (!r.ok) { setAuthError(r.msg); return; }
       setAuthForm({ name:"", email:"", password:"", company:"", jobTitle:"", phone:"" });
@@ -897,6 +936,14 @@ export default function App() {
                       style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:"1.5px solid rgba(0,0,0,.08)", fontSize:14, fontFamily:FONT, marginBottom:20, background:"rgba(255,255,255,.7)", outline:"none" }} />
                   </>
                 )}
+                {authMode === "login" && (
+                  <label style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14, cursor:"pointer", fontSize:13, color:P.sub }}>
+                    <div onClick={() => setRememberMe(!rememberMe)} style={{ width:20, height:20, borderRadius:6, border:`2px solid ${rememberMe ? P.accent : "#d1d5db"}`, background: rememberMe ? P.accent : "#fff", display:"flex", alignItems:"center", justifyContent:"center", transition:"all .2s", cursor:"pointer" }}>
+                      {rememberMe && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                    </div>
+                    로그인 정보 저장
+                  </label>
+                )}
                 <button className="btn-p" onClick={handleAuth} disabled={syncing} style={{ marginBottom:16, opacity: syncing ? 0.7 : 1 }}>
                   {syncing ? "처리중..." : (authMode === "login" ? "로그인" : "가입하기")}
                 </button>
@@ -915,6 +962,8 @@ export default function App() {
               </div>
             </div>
           </div>
+          <BNav active="my" onNav={t => { if(t==="home") go("home"); else if(t==="qr") go("qr"); else if(t==="plan") go("plan"); }} />
+        </div>
         )}
 
         {/* ══════ HOME ══════ */}
@@ -1225,6 +1274,28 @@ export default function App() {
                     </>
                   )}
                 </div>
+
+                {/* 입장권 업로드 */}
+                {user && (
+                  <div style={{ padding:"8px 16px 0" }}>
+                    <input type="file" accept="image/*" id="ticket-upload" style={{ display:"none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          await uploadTicketImage(expo.id, file);
+                          e.target.value = "";
+                        }
+                      }} />
+                    <button onClick={() => document.getElementById("ticket-upload")?.click()}
+                      style={{ width:"100%", padding:"12px 16px", borderRadius:14, border:`1.5px dashed ${regs.find(r=>String(r.expoId)===String(expo.id))?.qrImage ? P.accent+"60" : "#d1d5db"}`, background: regs.find(r=>String(r.expoId)===String(expo.id))?.qrImage ? P.accent+"08" : "#f9fafb", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontSize:13, fontWeight:700, color: regs.find(r=>String(r.expoId)===String(expo.id))?.qrImage ? P.accent : P.sub, fontFamily:FONT, transition:"all .2s" }}>
+                      {regs.find(r=>String(r.expoId)===String(expo.id))?.qrImage ? (
+                        <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 입장권 업로드 완료 (변경하기)</>
+                      ) : (
+                        <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 입장권 QR 업로드</>
+                      )}
+                    </button>
+                  </div>
+                )}
 
                 {/* share row */}
                 <div style={{ padding:"12px 16px 0", display:"flex", gap:8 }}>
@@ -1648,8 +1719,12 @@ export default function App() {
                             {ticketStatus==="approved" ? "✅ 승인완료" : "⏳ 승인대기"}
                           </span>
                         </div>
-                        <div style={{ background:"#f8f7ff", borderRadius:18, padding:24, marginBottom:16, border:`2px solid ${P.accent}18` }}>
-                          <QRCode size={200} />
+                        <div style={{ background:"#f8f7ff", borderRadius:18, padding:24, marginBottom:16, border:\`2px solid \${P.accent}18\` }}>
+                          {activeTicket.qrImage ? (
+                            <img src={activeTicket.qrImage} alt="입장권 QR" style={{ width:200, height:"auto", borderRadius:8, display:"block", margin:"0 auto" }} />
+                          ) : (
+                            <QRCode size={200} />
+                          )}
                         </div>
                         <div style={{ fontSize:11, color:P.sub, marginBottom:4 }}>입장권 번호</div>
                         <div style={{ fontSize:16, fontWeight:900, color:P.text, letterSpacing:2, wordBreak:"break-all" }}>{qrCodeStr}</div>
@@ -1716,8 +1791,12 @@ export default function App() {
               {qrFull && activeTicket && (
                 <div style={{ position:"absolute", inset:0, background:"#fff", zIndex:300, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:32, cursor:"pointer" }} onClick={() => setQrFull(false)}>
                   <div style={{ fontSize:13, color:P.sub, marginBottom:28, fontWeight:600 }}>탭하면 닫힙니다</div>
-                  <div style={{ padding:20, borderRadius:24, border:`3px solid ${P.accent}30` }}>
-                    <QRCode size={260} />
+                  <div style={{ padding:20, borderRadius:24, border:\`3px solid \${P.accent}30\` }}>
+                    {activeTicket.qrImage ? (
+                      <img src={activeTicket.qrImage} alt="입장권 QR" style={{ width:260, height:"auto", borderRadius:8, display:"block" }} />
+                    ) : (
+                      <QRCode size={260} />
+                    )}
                   </div>
                   <div style={{ fontSize:18, fontWeight:900, color:P.text, marginTop:24, letterSpacing:2, wordBreak:"break-all", textAlign:"center", padding:"0 20px" }}>{qrCodeStr}</div>
                   <div style={{ fontSize:14, color:P.sub, marginTop:8 }}>{ticketExpo?.name}</div>
