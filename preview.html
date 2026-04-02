@@ -610,25 +610,25 @@ function updateQRPage(){
   const ex=(_allData||[]).find(e=>String(e.id)===exId);
   const name=ex?ex.name:'전시회';
   const qrImg=_ticketImages[exId];
-  pg.querySelector('div').innerHTML=\`
+  pg.querySelector('div').innerHTML=`
     <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">QR 입장권</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px">\${name}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px">${name}</div>
     <div style="background:rgba(255,255,255,.95);border-radius:24px;padding:24px;margin:0 20px;box-shadow:0 8px 40px rgba(0,0,0,.2)">
       <div style="display:inline-flex;padding:6px 14px;background:rgba(5,150,105,.08);border-radius:20px;margin-bottom:16px"><span style="font-size:11px;font-weight:800;color:#059669">✅ 입장권 등록완료</span></div>
       <div style="background:#f8f7ff;border-radius:18px;padding:20px;margin-bottom:12px;border:2px solid rgba(99,102,241,.1)">
-        <img src="\${qrImg}" alt="QR" style="width:200px;height:auto;border-radius:8px;display:block;margin:0 auto" />
+        <img src="${qrImg}" alt="QR" style="width:200px;height:auto;border-radius:8px;display:block;margin:0 auto" />
       </div>
       <div style="font-size:11px;color:#6b7280;margin-bottom:4px">전시회</div>
-      <div style="font-size:15px;font-weight:900;color:#1e1e2e">\${name}</div>
+      <div style="font-size:15px;font-weight:900;color:#1e1e2e">${name}</div>
     </div>
-    \${keys.length>1?\`<div style="margin-top:20px;padding:0 20px">\${keys.filter(k=>k!==exId).map(k=>{
+    ${keys.length>1?`<div style="margin-top:20px;padding:0 20px">${keys.filter(k=>k!==exId).map(k=>{
       const e2=(_allData||[]).find(e=>String(e.id)===k);
-      return \`<div onclick="_ticketImages._last='\${k}';updateQRPage()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px">
-        <img src="\${_ticketImages[k]}" style="width:40px;height:40px;border-radius:8px;object-fit:cover" />
-        <div style="text-align:left"><div style="font-size:13px;font-weight:700;color:#fff">\${e2?e2.name:'전시회'}</div><div style="font-size:11px;color:rgba(255,255,255,.5)">✅ 등록완료</div></div>
-      </div>\`;
-    }).join('')}</div>\`:''}
-  \`;
+      return `<div onclick="_ticketImages._last='${k}';updateQRPage()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px">
+        <img src="${_ticketImages[k]}" style="width:40px;height:40px;border-radius:8px;object-fit:cover" />
+        <div style="text-align:left"><div style="font-size:13px;font-weight:700;color:#fff">${e2?e2.name:'전시회'}</div><div style="font-size:11px;color:rgba(255,255,255,.5)">✅ 등록완료</div></div>
+      </div>`;
+    }).join('')}</div>`:''}
+  `;
 }
 
 function showDetail(ex, list, listIdx){
